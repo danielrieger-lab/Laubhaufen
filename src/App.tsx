@@ -34,27 +34,16 @@ const dayOrder: DayKey[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'frida
 const mealSlots: MealSlot[] = ['breakfast', 'lunch', 'dinner'];
 const starterRecipeIds = ['starter-overnight-oats', 'starter-vegetable-pasta', 'starter-sheet-pan-tacos'];
 const starterMealIds = ['starter-monday-breakfast', 'starter-monday-dinner', 'starter-wednesday-lunch'];
-
-function createStarterShopping(): ShoppingItem[] {
-  const now = Date.now();
-
-  return [
-    { id: 'starter-shopping-oats', name: 'Haferflocken', quantity: 1, unit: 'Packung', aisle: 'Frühstück', checked: false, createdAt: now, updatedAt: now },
-    { id: 'starter-shopping-pasta', name: 'Nudeln', quantity: 2, unit: 'Packungen', aisle: 'Trockenvorräte', checked: false, createdAt: now, updatedAt: now },
-    { id: 'starter-shopping-tortillas', name: 'Tortillas', quantity: 1, unit: 'Packung', aisle: 'Backwaren', checked: false, createdAt: now, updatedAt: now }
-  ];
-}
+const starterShoppingIds = ['starter-shopping-oats', 'starter-shopping-pasta', 'starter-shopping-tortillas'];
 
 function App() {
   const persisted = loadAppState();
   const firebase = useMemo(() => getFirebaseServices(), []);
   const currentWeekStart = useMemo(() => getMondayForDate(new Date()), []);
 
-  const starterShopping = useMemo(() => createStarterShopping(), []);
-
   const [recipes, setRecipes] = useState<Recipe[]>(() => (persisted?.recipes ?? []).filter((recipe) => !starterRecipeIds.includes(recipe.id)));
   const [weeklyMeals, setWeeklyMeals] = useState<WeeklyMeal[]>(() => (persisted?.weeklyMeals ?? []).filter((meal) => !starterMealIds.includes(meal.id)));
-  const [shoppingItems, setShoppingItems] = useState<ShoppingItem[]>(persisted?.shoppingItems ?? starterShopping);
+  const [shoppingItems, setShoppingItems] = useState<ShoppingItem[]>(() => (persisted?.shoppingItems ?? []).filter((item) => !starterShoppingIds.includes(item.id)));
   const [pantryItems, setPantryItems] = useState<PantryItem[]>(persisted?.pantryItems ?? []);
   const [activeTab, setActiveTab] = useState<'recipes' | 'week' | 'shopping' | 'pantry' | null>(null);
   const [syncStatus, setSyncStatus] = useState(firebase ? 'Gemeinsame Synchronisierung wird verbunden ...' : 'Lokaler Modus');
@@ -92,13 +81,14 @@ function App() {
 
         await Promise.all([
           ...starterRecipeIds.map((recipeId) => deleteRecipe(firebase.db, recipeId)),
-          ...starterMealIds.map((mealId) => deleteWeeklyMeal(firebase.db, mealId))
+          ...starterMealIds.map((mealId) => deleteWeeklyMeal(firebase.db, mealId)),
+          ...starterShoppingIds.map((itemId) => deleteShoppingItem(firebase.db, itemId))
         ]);
 
         unsubscribeRecipes = subscribeToRecipes(firebase.db, (items) => setRecipes(items.filter((recipe) => !starterRecipeIds.includes(recipe.id))), handleSyncError);
-        unsubscribeMeals = subscribeToWeeklyMeals(firebase.db, setWeeklyMeals, handleSyncError);
+        unsubscribeMeals = subscribeToWeeklyMeals(firebase.db, (items) => setWeeklyMeals(items.filter((meal) => !starterMealIds.includes(meal.id))), handleSyncError);
         unsubscribeShopping = subscribeToShoppingItems(firebase.db, (items) => {
-          setShoppingItems(items);
+          setShoppingItems(items.filter((item) => !starterShoppingIds.includes(item.id)));
           setSyncStatus('Gemeinsame Synchronisierung aktiv');
         }, handleSyncError);
         unsubscribePantry = subscribeToPantryItems(firebase.db, setPantryItems, handleSyncError);
@@ -106,7 +96,7 @@ function App() {
         await seedIfEmpty(firebase.db, {
           recipes,
           weeklyMeals,
-          shoppingItems: shoppingItems.length > 0 ? shoppingItems : starterShopping,
+          shoppingItems,
           pantryItems
         });
       })
