@@ -171,9 +171,6 @@ function App() {
         <div className="hero-copy">
           <p className="eyebrow">Laubhaufen</p>
           <h1>Rezepte, Wochenplanung und Einkaufslisten in einer gemeinsamen PWA.</h1>
-          <p className="hero-text">
-            Alle bearbeiten dieselben aktuellen Firestore-Daten. Es gibt keinen sichtbaren Anmeldeschritt, aber die App nutzt im Hintergrund eine anonyme Firebase-Anmeldung, damit die gemeinsamen Daten geschützt bleiben.
-          </p>
 
           <div className="hero-meta">
             <span>{syncStatus}</span>
