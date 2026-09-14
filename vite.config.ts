@@ -12,9 +12,9 @@ export default defineConfig(({ mode }) => ({
       manifest: {
         name: 'Laubhaufen',
         short_name: 'Laubhaufen',
-        description: 'Offline-first collaborative meal planning with shared recipes and shopping lists.',
-        theme_color: '#214234',
-        background_color: '#f4efe8',
+        description: 'Gemeinsame Offline-PWA für Rezepte, Wochenplanung und Einkaufslisten.',
+        theme_color: '#0d2f24',
+        background_color: '#0d2f24',
         display: 'standalone',
         start_url: '.',
         icons: [

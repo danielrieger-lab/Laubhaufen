@@ -81,7 +81,7 @@ function normalizeStrings(values: unknown): string[] {
 function normalizeRecipe(id: string, data: Record<string, unknown>): Recipe {
   return {
     id,
-    title: typeof data.title === 'string' ? data.title : 'Untitled recipe',
+    title: typeof data.title === 'string' ? data.title : 'Unbenanntes Rezept',
     servings: typeof data.servings === 'number' ? data.servings : 4,
     prepTimeMinutes: typeof data.prepTimeMinutes === 'number' ? data.prepTimeMinutes : 30,
     ingredients: normalizeStrings(data.ingredients),
@@ -98,7 +98,7 @@ function normalizeMeal(id: string, data: Record<string, unknown>): WeeklyMeal {
     day: data.day === 'monday' || data.day === 'tuesday' || data.day === 'wednesday' || data.day === 'thursday' || data.day === 'friday' || data.day === 'saturday' || data.day === 'sunday' ? data.day : 'monday',
     slot: data.slot === 'breakfast' || data.slot === 'lunch' || data.slot === 'dinner' ? data.slot : 'dinner',
     recipeId: typeof data.recipeId === 'string' ? data.recipeId : '',
-    recipeTitle: typeof data.recipeTitle === 'string' ? data.recipeTitle : 'Custom meal',
+    recipeTitle: typeof data.recipeTitle === 'string' ? data.recipeTitle : 'Eigenes Gericht',
     note: typeof data.note === 'string' ? data.note : '',
     createdAt: typeof data.createdAt === 'number' ? data.createdAt : Date.now(),
     updatedAt: typeof data.updatedAt === 'number' ? data.updatedAt : Date.now()
@@ -110,8 +110,8 @@ function normalizeShoppingItem(id: string, data: Record<string, unknown>): Shopp
     id,
     name: typeof data.name === 'string' ? data.name : 'Unnamed item',
     quantity: typeof data.quantity === 'number' ? data.quantity : 1,
-    unit: typeof data.unit === 'string' ? data.unit : 'item',
-    aisle: typeof data.aisle === 'string' ? data.aisle : 'General',
+    unit: typeof data.unit === 'string' ? data.unit : 'Stück',
+    aisle: typeof data.aisle === 'string' ? data.aisle : 'Allgemein',
     checked: typeof data.checked === 'boolean' ? data.checked : false,
     createdAt: typeof data.createdAt === 'number' ? data.createdAt : Date.now(),
     updatedAt: typeof data.updatedAt === 'number' ? data.updatedAt : Date.now()

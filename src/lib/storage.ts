@@ -20,11 +20,27 @@ export function getMondayForDate(date: Date): string {
 }
 
 export function dayLabel(day: DayKey): string {
-  return day.slice(0, 3).replace(/^./, (letter) => letter.toUpperCase());
+  const labels: Record<DayKey, string> = {
+    monday: 'Montag',
+    tuesday: 'Dienstag',
+    wednesday: 'Mittwoch',
+    thursday: 'Donnerstag',
+    friday: 'Freitag',
+    saturday: 'Samstag',
+    sunday: 'Sonntag'
+  };
+
+  return labels[day];
 }
 
 export function slotLabel(slot: MealSlot): string {
-  return slot.charAt(0).toUpperCase() + slot.slice(1);
+  const labels: Record<MealSlot, string> = {
+    breakfast: 'Frühstück',
+    lunch: 'Mittagessen',
+    dinner: 'Abendessen'
+  };
+
+  return labels[slot];
 }
 
 export function parseLines(value: string): string[] {

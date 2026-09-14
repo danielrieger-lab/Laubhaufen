@@ -36,31 +36,31 @@ function createStarterRecipes(): Recipe[] {
   return [
     {
       id: 'starter-overnight-oats',
-      title: 'Overnight oats',
+      title: 'Overnight Oats',
       servings: 4,
       prepTimeMinutes: 10,
-      ingredients: ['rolled oats', 'milk or plant milk', 'yogurt', 'berries', 'honey'],
-      instructions: ['Mix the oats and liquid.', 'Chill overnight.', 'Top with berries before serving.'],
+      ingredients: ['Haferflocken', 'Milch oder Pflanzenmilch', 'Joghurt', 'Beeren', 'Honig'],
+      instructions: ['Haferflocken und Flüssigkeit mischen.', 'Über Nacht kalt stellen.', 'Vor dem Servieren mit Beeren garnieren.'],
       createdAt: now,
       updatedAt: now
     },
     {
       id: 'starter-vegetable-pasta',
-      title: 'Vegetable pasta',
+      title: 'Gemüsepasta',
       servings: 4,
       prepTimeMinutes: 25,
-      ingredients: ['pasta', 'zucchini', 'tomatoes', 'olive oil', 'garlic'],
-      instructions: ['Cook the pasta.', 'Sauté vegetables.', 'Combine and season to taste.'],
+      ingredients: ['Nudeln', 'Zucchini', 'Tomaten', 'Olivenöl', 'Knoblauch'],
+      instructions: ['Nudeln kochen.', 'Gemüse anbraten.', 'Alles vermengen und abschmecken.'],
       createdAt: now,
       updatedAt: now
     },
     {
       id: 'starter-sheet-pan-tacos',
-      title: 'Sheet-pan tacos',
+      title: 'Tacos vom Blech',
       servings: 4,
       prepTimeMinutes: 35,
-      ingredients: ['tortillas', 'beans', 'peppers', 'onion', 'salsa'],
-      instructions: ['Roast the filling.', 'Warm tortillas.', 'Assemble with salsa and toppings.'],
+      ingredients: ['Tortillas', 'Bohnen', 'Paprika', 'Zwiebel', 'Salsa'],
+      instructions: ['Füllung rösten.', 'Tortillas erwärmen.', 'Mit Salsa und Toppings anrichten.'],
       createdAt: now,
       updatedAt: now
     }
@@ -77,8 +77,8 @@ function createStarterMeals(weekStart: string): WeeklyMeal[] {
       day: 'monday',
       slot: 'breakfast',
       recipeId: 'starter-overnight-oats',
-      recipeTitle: 'Overnight oats',
-      note: 'Simple start for the week.',
+      recipeTitle: 'Overnight Oats',
+      note: 'Ein einfacher Start in die Woche.',
       createdAt: now,
       updatedAt: now
     },
@@ -88,8 +88,8 @@ function createStarterMeals(weekStart: string): WeeklyMeal[] {
       day: 'monday',
       slot: 'dinner',
       recipeId: 'starter-vegetable-pasta',
-      recipeTitle: 'Vegetable pasta',
-      note: 'Use any leftover vegetables.',
+      recipeTitle: 'Gemüsepasta',
+      note: 'Übrig gebliebenes Gemüse verwenden.',
       createdAt: now,
       updatedAt: now
     },
@@ -99,8 +99,8 @@ function createStarterMeals(weekStart: string): WeeklyMeal[] {
       day: 'wednesday',
       slot: 'lunch',
       recipeId: 'starter-sheet-pan-tacos',
-      recipeTitle: 'Sheet-pan tacos',
-      note: 'Good for a quick lunch.',
+      recipeTitle: 'Tacos vom Blech',
+      note: 'Ideal für ein schnelles Mittagessen.',
       createdAt: now,
       updatedAt: now
     }
@@ -111,14 +111,14 @@ function createStarterShopping(): ShoppingItem[] {
   const now = Date.now();
 
   return [
-    { id: 'starter-shopping-oats', name: 'rolled oats', quantity: 1, unit: 'bag', aisle: 'Breakfast', checked: false, createdAt: now, updatedAt: now },
-    { id: 'starter-shopping-pasta', name: 'pasta', quantity: 2, unit: 'packs', aisle: 'Dry goods', checked: false, createdAt: now, updatedAt: now },
-    { id: 'starter-shopping-tortillas', name: 'tortillas', quantity: 1, unit: 'pack', aisle: 'Bakery', checked: false, createdAt: now, updatedAt: now }
+    { id: 'starter-shopping-oats', name: 'Haferflocken', quantity: 1, unit: 'Packung', aisle: 'Frühstück', checked: false, createdAt: now, updatedAt: now },
+    { id: 'starter-shopping-pasta', name: 'Nudeln', quantity: 2, unit: 'Packungen', aisle: 'Trockenvorräte', checked: false, createdAt: now, updatedAt: now },
+    { id: 'starter-shopping-tortillas', name: 'Tortillas', quantity: 1, unit: 'Packung', aisle: 'Backwaren', checked: false, createdAt: now, updatedAt: now }
   ];
 }
 
 function formatDate(value: number): string {
-  return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }).format(value);
+  return new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(value);
 }
 
 function App() {
@@ -134,7 +134,7 @@ function App() {
   const [weeklyMeals, setWeeklyMeals] = useState<WeeklyMeal[]>(persisted?.weeklyMeals ?? starterMeals);
   const [shoppingItems, setShoppingItems] = useState<ShoppingItem[]>(persisted?.shoppingItems ?? starterShopping);
   const [activeTab, setActiveTab] = useState<'recipes' | 'week' | 'shopping'>('recipes');
-  const [syncStatus, setSyncStatus] = useState(firebase ? 'Connecting shared sync...' : 'Local mode');
+  const [syncStatus, setSyncStatus] = useState(firebase ? 'Gemeinsame Synchronisierung wird verbunden ...' : 'Lokaler Modus');
 
   const [recipeDraft, setRecipeDraft] = useState({ title: '', servings: '4', prepTimeMinutes: '30', ingredients: '', instructions: '' });
   const [mealDraft, setMealDraft] = useState<{ day: DayKey; slot: MealSlot; recipeId: string; note: string }>({
@@ -143,7 +143,7 @@ function App() {
     recipeId: '',
     note: ''
   });
-  const [shoppingDraft, setShoppingDraft] = useState({ name: '', quantity: '1', unit: 'item', aisle: 'General' });
+  const [shoppingDraft, setShoppingDraft] = useState({ name: '', quantity: '1', unit: 'Stück', aisle: 'Allgemein' });
 
   useEffect(() => {
     saveAppState({ recipes, weeklyMeals, shoppingItems });
@@ -169,7 +169,7 @@ function App() {
         unsubscribeMeals = subscribeToWeeklyMeals(firebase.db, setWeeklyMeals);
         unsubscribeShopping = subscribeToShoppingItems(firebase.db, (items) => {
           setShoppingItems(items);
-          setSyncStatus('Shared sync active');
+          setSyncStatus('Gemeinsame Synchronisierung aktiv');
         });
 
         await seedIfEmpty(firebase.db, {
@@ -180,7 +180,7 @@ function App() {
       })
       .catch(() => {
         if (!cancelled) {
-          setSyncStatus('Sync unavailable');
+          setSyncStatus('Synchronisierung nicht verfügbar');
         }
       });
 
@@ -284,7 +284,7 @@ function App() {
       day: mealDraft.day,
       slot: mealDraft.slot,
       recipeId: mealDraft.recipeId,
-      recipeTitle: recipe?.title ?? 'Custom meal',
+      recipeTitle: recipe?.title ?? 'Eigenes Gericht',
       note: mealDraft.note.trim()
     });
 
@@ -302,11 +302,11 @@ function App() {
     const item = createShoppingItem({
       name: shoppingDraft.name.trim(),
       quantity: Number(shoppingDraft.quantity) || 1,
-      unit: shoppingDraft.unit.trim() || 'item',
-      aisle: shoppingDraft.aisle.trim() || 'General'
+      unit: shoppingDraft.unit.trim() || 'Stück',
+      aisle: shoppingDraft.aisle.trim() || 'Allgemein'
     });
 
-    setShoppingDraft({ name: '', quantity: '1', unit: 'item', aisle: 'General' });
+    setShoppingDraft({ name: '', quantity: '1', unit: 'Stück', aisle: 'Allgemein' });
     void saveShoppingItem(item);
   }
 
@@ -317,48 +317,48 @@ function App() {
       <section className="hero-card hero-card--wide">
         <div className="hero-copy">
           <p className="eyebrow">Laubhaufen</p>
-          <h1>Recipes, weekly meals, and shopping lists in one shared PWA.</h1>
+          <h1>Rezepte, Wochenplanung und Einkaufslisten in einer gemeinsamen PWA.</h1>
           <p className="hero-text">
-            Everyone edits the same live Firestore data. There is no visible login step, but the app uses anonymous Firebase auth behind the scenes so the shared data stays protected.
+            Alle bearbeiten dieselben aktuellen Firestore-Daten. Es gibt keinen sichtbaren Anmeldeschritt, aber die App nutzt im Hintergrund eine anonyme Firebase-Anmeldung, damit die gemeinsamen Daten geschützt bleiben.
           </p>
 
           <div className="hero-meta">
             <span>{syncStatus}</span>
-            <span>{recipes.length} recipes</span>
-            <span>{weekMeals.length} planned meals</span>
-            <span>{shoppingItems.length} shopping items</span>
+            <span>{recipes.length} Rezepte</span>
+            <span>{weekMeals.length} geplante Mahlzeiten</span>
+            <span>{shoppingItems.length} Einkaufsartikel</span>
           </div>
         </div>
 
         <div className="stats-grid stats-grid--wide">
           <article>
             <strong>{recipes.length}</strong>
-            <span>Recipes</span>
+            <span>Rezepte</span>
           </article>
           <article>
             <strong>{weekMeals.length}</strong>
-            <span>Meals this week</span>
+            <span>Mahlzeiten diese Woche</span>
           </article>
           <article>
             <strong>{shoppingItems.length}</strong>
-            <span>Shopping items</span>
+            <span>Einkaufsartikel</span>
           </article>
           <article>
             <strong>{checkedCount}</strong>
-            <span>Checked off</span>
+            <span>Erledigt</span>
           </article>
         </div>
       </section>
 
-      <nav className="tab-bar" aria-label="Sections">
+      <nav className="tab-bar" aria-label="Bereiche">
         <button className={activeTab === 'recipes' ? 'tab active' : 'tab'} onClick={() => setActiveTab('recipes')} type="button">
-          Recipes
+          Rezepte
         </button>
         <button className={activeTab === 'week' ? 'tab active' : 'tab'} onClick={() => setActiveTab('week')} type="button">
-          Weekly schedule
+          Wochenplan
         </button>
         <button className={activeTab === 'shopping' ? 'tab active' : 'tab'} onClick={() => setActiveTab('shopping')} type="button">
-          Shopping list
+          Einkaufsliste
         </button>
       </nav>
 
@@ -366,45 +366,45 @@ function App() {
         <section className="workspace-grid">
           <form className="composer-card" onSubmit={handleRecipeSubmit}>
             <div className="card-heading">
-              <h2>Add recipe</h2>
-              <p>Store ingredients and instructions as a shared editable recipe.</p>
+              <h2>Rezept hinzufügen</h2>
+              <p>Zutaten und Zubereitung als gemeinsames, bearbeitbares Rezept speichern.</p>
             </div>
 
             <label>
-              Title
-              <input value={recipeDraft.title} onChange={(event) => setRecipeDraft((current) => ({ ...current, title: event.target.value }))} placeholder="Recipe title" />
+              Titel
+              <input value={recipeDraft.title} onChange={(event) => setRecipeDraft((current) => ({ ...current, title: event.target.value }))} placeholder="Name des Rezepts" />
             </label>
 
             <div className="two-column">
               <label>
-                Servings
+                Portionen
                 <input value={recipeDraft.servings} onChange={(event) => setRecipeDraft((current) => ({ ...current, servings: event.target.value }))} min="1" type="number" />
               </label>
               <label>
-                Prep time
+                Zubereitungszeit
                 <input value={recipeDraft.prepTimeMinutes} onChange={(event) => setRecipeDraft((current) => ({ ...current, prepTimeMinutes: event.target.value }))} min="1" type="number" />
               </label>
             </div>
 
             <label>
-              Ingredients, one per line
+              Zutaten, eine pro Zeile
               <textarea value={recipeDraft.ingredients} onChange={(event) => setRecipeDraft((current) => ({ ...current, ingredients: event.target.value }))} rows={5} />
             </label>
 
             <label>
-              Instructions, one per line
+              Zubereitung, eine pro Zeile
               <textarea value={recipeDraft.instructions} onChange={(event) => setRecipeDraft((current) => ({ ...current, instructions: event.target.value }))} rows={5} />
             </label>
 
-            <button type="submit">Save recipe</button>
+            <button type="submit">Rezept speichern</button>
           </form>
 
           <div className="content-column">
             <article className="list-card">
               <div className="card-heading inline">
                 <div>
-                  <h2>Recipes</h2>
-                  <p>{totalIngredients} ingredients across all recipes</p>
+                  <h2>Rezepte</h2>
+                  <p>{totalIngredients} Zutaten in allen Rezepten</p>
                 </div>
               </div>
 
@@ -422,14 +422,14 @@ function App() {
         <section className="workspace-grid">
           <form className="composer-card" onSubmit={handleMealSubmit}>
             <div className="card-heading">
-              <h2>Plan a meal</h2>
-              <p>Assign a recipe to any meal slot in the current week.</p>
+              <h2>Mahlzeit planen</h2>
+              <p>Ein Rezept einem beliebigen Platz im aktuellen Wochenplan zuweisen.</p>
             </div>
 
             <label>
-              Recipe
+              Rezept
               <select value={mealDraft.recipeId} onChange={(event) => setMealDraft((current) => ({ ...current, recipeId: event.target.value }))}>
-                <option value="">Choose a recipe</option>
+                <option value="">Rezept auswählen</option>
                 {recipes.map((recipe) => (
                   <option key={recipe.id} value={recipe.id}>
                     {recipe.title}
@@ -440,7 +440,7 @@ function App() {
 
             <div className="two-column">
               <label>
-                Day
+                Tag
                 <select value={mealDraft.day} onChange={(event) => setMealDraft((current) => ({ ...current, day: event.target.value as DayKey }))}>
                   {dayOrder.map((day) => (
                     <option key={day} value={day}>
@@ -450,7 +450,7 @@ function App() {
                 </select>
               </label>
               <label>
-                Meal
+                Mahlzeit
                 <select value={mealDraft.slot} onChange={(event) => setMealDraft((current) => ({ ...current, slot: event.target.value as MealSlot }))}>
                   {mealSlots.map((slot) => (
                     <option key={slot} value={slot}>
@@ -462,19 +462,19 @@ function App() {
             </div>
 
             <label>
-              Note
+              Notiz
               <textarea value={mealDraft.note} onChange={(event) => setMealDraft((current) => ({ ...current, note: event.target.value }))} rows={4} />
             </label>
 
-            <button type="submit">Save meal slot</button>
+            <button type="submit">Mahlzeit speichern</button>
           </form>
 
           <div className="content-column">
             <article className="list-card schedule-card">
               <div className="card-heading inline">
                 <div>
-                  <h2>This week</h2>
-                  <p>Week starting {currentWeekStart}</p>
+                  <h2>Diese Woche</h2>
+                  <p>Woche ab {currentWeekStart}</p>
                 </div>
               </div>
 
@@ -483,7 +483,7 @@ function App() {
                   <div key={day} className="weekly-day">
                     <header>
                       <strong>{dayLabel(day)}</strong>
-                      <span>{weekMeals.filter((meal) => meal.day === day).length} meals</span>
+                      <span>{weekMeals.filter((meal) => meal.day === day).length} Mahlzeiten</span>
                     </header>
 
                     <div className="weekly-day-meals">
@@ -495,7 +495,7 @@ function App() {
                         ) : (
                           <div key={slot} className="meal-slot meal-slot-empty">
                             <span className="meal-slot-label">{slotLabel(slot)}</span>
-                            <span>No meal planned</span>
+                            <span>Keine Mahlzeit geplant</span>
                           </div>
                         );
                       })}
@@ -512,40 +512,40 @@ function App() {
         <section className="workspace-grid">
           <form className="composer-card" onSubmit={handleShoppingSubmit}>
             <div className="card-heading">
-              <h2>Add shopping item</h2>
-              <p>Keep the list synced and check things off as they are bought.</p>
+              <h2>Einkaufsartikel hinzufügen</h2>
+              <p>Die Liste synchron halten und Einkäufe nach dem Besorgen abhaken.</p>
             </div>
 
             <label>
-              Item
-              <input value={shoppingDraft.name} onChange={(event) => setShoppingDraft((current) => ({ ...current, name: event.target.value }))} placeholder="Flour" />
+              Artikel
+              <input value={shoppingDraft.name} onChange={(event) => setShoppingDraft((current) => ({ ...current, name: event.target.value }))} placeholder="Mehl" />
             </label>
 
             <div className="two-column">
               <label>
-                Quantity
+                Menge
                 <input value={shoppingDraft.quantity} onChange={(event) => setShoppingDraft((current) => ({ ...current, quantity: event.target.value }))} type="number" min="1" />
               </label>
               <label>
-                Unit
-                <input value={shoppingDraft.unit} onChange={(event) => setShoppingDraft((current) => ({ ...current, unit: event.target.value }))} placeholder="kg, pack, bottle" />
+                Einheit
+                <input value={shoppingDraft.unit} onChange={(event) => setShoppingDraft((current) => ({ ...current, unit: event.target.value }))} placeholder="kg, Packung, Flasche" />
               </label>
             </div>
 
             <label>
-              Aisle
-              <input value={shoppingDraft.aisle} onChange={(event) => setShoppingDraft((current) => ({ ...current, aisle: event.target.value }))} placeholder="Produce" />
+              Bereich
+              <input value={shoppingDraft.aisle} onChange={(event) => setShoppingDraft((current) => ({ ...current, aisle: event.target.value }))} placeholder="Obst und Gemüse" />
             </label>
 
-            <button type="submit">Save item</button>
+            <button type="submit">Artikel speichern</button>
           </form>
 
           <div className="content-column">
             <article className="list-card">
               <div className="card-heading inline">
                 <div>
-                  <h2>Shopping list</h2>
-                  <p>{checkedCount} of {shoppingItems.length} checked</p>
+                  <h2>Einkaufsliste</h2>
+                  <p>{checkedCount} von {shoppingItems.length} erledigt</p>
                 </div>
               </div>
 
@@ -583,30 +583,30 @@ function RecipeCard({ recipe, onSave, onDelete }: { recipe: Recipe; onSave: (rec
     <article className="entry-card recipe-card">
       <header>
         <div>
-          <p className="entry-kind">Recipe</p>
+          <p className="entry-kind">Rezept</p>
           <input className="inline-input title-input" value={draft.title} onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value, updatedAt: Date.now() }))} onBlur={persist} />
         </div>
-        <span className="status-pill">{draft.servings} servings</span>
+        <span className="status-pill">{draft.servings} Portionen</span>
       </header>
 
       <div className="two-column recipe-meta">
         <label>
-          Servings
+          Portionen
           <input type="number" min="1" value={draft.servings} onChange={(event) => setDraft((current) => ({ ...current, servings: Number(event.target.value), updatedAt: Date.now() }))} onBlur={persist} />
         </label>
         <label>
-          Prep time
+          Zubereitungszeit
           <input type="number" min="1" value={draft.prepTimeMinutes} onChange={(event) => setDraft((current) => ({ ...current, prepTimeMinutes: Number(event.target.value), updatedAt: Date.now() }))} onBlur={persist} />
         </label>
       </div>
 
       <div className="recipe-columns">
         <label>
-          Ingredients
+          Zutaten
           <textarea value={joinLines(draft.ingredients)} onChange={(event) => setDraft((current) => ({ ...current, ingredients: parseLines(event.target.value), updatedAt: Date.now() }))} onBlur={persist} rows={5} />
         </label>
         <label>
-          Instructions
+          Zubereitung
           <textarea value={joinLines(draft.instructions)} onChange={(event) => setDraft((current) => ({ ...current, instructions: parseLines(event.target.value), updatedAt: Date.now() }))} onBlur={persist} rows={5} />
         </label>
       </div>
@@ -615,10 +615,10 @@ function RecipeCard({ recipe, onSave, onDelete }: { recipe: Recipe; onSave: (rec
         <span>{formatDate(recipe.updatedAt)}</span>
         <div className="entry-actions entry-actions--compact">
           <button type="button" onClick={persist}>
-            Save
+            Speichern
           </button>
           <button type="button" className="danger" onClick={onDelete}>
-            Delete
+            Löschen
           </button>
         </div>
       </footer>
@@ -662,11 +662,11 @@ function WeeklyMealCard({
         value={draft.recipeId}
         onChange={(event) => {
           const selected = recipes.find((recipe) => recipe.id === event.target.value);
-          setDraft((current) => ({ ...current, recipeId: event.target.value, recipeTitle: selected?.title ?? 'Custom meal', updatedAt: Date.now() }));
+          setDraft((current) => ({ ...current, recipeId: event.target.value, recipeTitle: selected?.title ?? 'Eigenes Gericht', updatedAt: Date.now() }));
         }}
         onBlur={persist}
       >
-        <option value="">Custom meal</option>
+        <option value="">Eigenes Gericht</option>
         {recipes.map((recipe) => (
           <option key={recipe.id} value={recipe.id}>
             {recipe.title}
@@ -674,14 +674,14 @@ function WeeklyMealCard({
         ))}
       </select>
 
-      <textarea value={draft.note} onChange={(event) => setDraft((current) => ({ ...current, note: event.target.value, updatedAt: Date.now() }))} onBlur={persist} rows={3} placeholder="Optional note" />
+      <textarea value={draft.note} onChange={(event) => setDraft((current) => ({ ...current, note: event.target.value, updatedAt: Date.now() }))} onBlur={persist} rows={3} placeholder="Optionale Notiz" />
 
       <div className="entry-actions entry-actions--compact">
         <button type="button" onClick={persist}>
-          Save
+          Speichern
         </button>
         <button type="button" className="danger" onClick={onDelete}>
-          Delete
+          Löschen
         </button>
       </div>
     </article>
@@ -721,14 +721,14 @@ function ShoppingCard({
         <input value={draft.unit} onChange={(event) => setDraft((current) => ({ ...current, unit: event.target.value, updatedAt: Date.now() }))} onBlur={persist} />
       </div>
 
-      <input value={draft.aisle} onChange={(event) => setDraft((current) => ({ ...current, aisle: event.target.value, updatedAt: Date.now() }))} onBlur={persist} placeholder="Aisle" />
+      <input value={draft.aisle} onChange={(event) => setDraft((current) => ({ ...current, aisle: event.target.value, updatedAt: Date.now() }))} onBlur={persist} placeholder="Bereich" />
 
       <div className="entry-actions entry-actions--compact">
         <button type="button" onClick={persist}>
-          Save
+          Speichern
         </button>
         <button type="button" className="danger" onClick={onDelete}>
-          Delete
+          Löschen
         </button>
       </div>
     </article>
