@@ -261,6 +261,114 @@ button {
   margin-bottom: 6px;
 }
 
+.week-window {
+  margin-top: 24px;
+  padding: 24px;
+  border: 1px solid rgba(20, 35, 28, 0.1);
+  border-radius: 28px;
+  background: rgba(255, 252, 246, 0.94);
+  box-shadow: 0 24px 60px rgba(3, 18, 12, 0.28);
+}
+
+.week-window-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.week-window-heading h2 {
+  margin: 0;
+  color: #173b2d;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+}
+
+.week-window-heading > span {
+  color: #5b6e62;
+  font-weight: 700;
+}
+
+.week-window-eyebrow {
+  margin-bottom: 6px;
+  color: #7a4a2d;
+  font-size: 0.78rem;
+  line-height: 1;
+  letter-spacing: 0.18em;
+  max-width: none;
+  text-transform: uppercase;
+}
+
+.schedule-table {
+  display: grid;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.schedule-row {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.7fr) repeat(3, minmax(170px, 1fr));
+  gap: 8px;
+  min-width: 700px;
+}
+
+.schedule-header {
+  color: #214234;
+  font-size: 0.88rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.schedule-day-cell,
+.schedule-slot-cell,
+.schedule-meal-cell {
+  min-height: 84px;
+  padding: 14px;
+  border-radius: 16px;
+}
+
+.schedule-day-cell {
+  display: flex;
+  align-items: center;
+  color: #173b2d;
+  font-weight: 800;
+}
+
+.schedule-slot-cell {
+  min-height: 0;
+  padding: 8px 14px;
+}
+
+.schedule-meal-cell {
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  border: 1px solid rgba(20, 35, 28, 0.08);
+  background: rgba(33, 66, 52, 0.06);
+}
+
+.schedule-meal-cell.has-meal {
+  background: linear-gradient(145deg, rgba(122, 74, 45, 0.14), rgba(33, 66, 52, 0.08));
+}
+
+.schedule-meal-cell strong {
+  color: #173b2d;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.08rem;
+}
+
+.schedule-meal-cell span {
+  color: #5b6e62;
+  font-size: 0.86rem;
+  line-height: 1.35;
+}
+
+.schedule-empty {
+  font-style: italic;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -479,6 +587,16 @@ button.danger {
 
   .recipe-window-heading,
   .recipe-summary-heading {
+    flex-direction: column;
+  }
+
+  .week-window {
+    padding: 18px;
+    border-radius: 22px;
+  }
+
+  .week-window-heading {
+    align-items: start;
     flex-direction: column;
   }
 

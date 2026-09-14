@@ -10,12 +10,17 @@ import {
 } from './lib/firebase';
 import {
   createRecipe,
+  dayLabel,
   getMondayForDate,
   parseLines,
   loadAppState,
   saveAppState,
+  slotLabel,
 } from './lib/storage';
-import type { Recipe, ShoppingItem, WeeklyMeal } from './lib/types';
+import type { DayKey, MealSlot, Recipe, ShoppingItem, WeeklyMeal } from './lib/types';
+
+const dayOrder: DayKey[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+const mealSlots: MealSlot[] = ['breakfast', 'lunch', 'dinner'];
 
 function createStarterRecipes(): Recipe[] {
   const now = Date.now();
@@ -386,6 +391,49 @@ function App() {
                 </article>
               ))}
             </div>
+          </div>
+        </section>
+      ) : null}
+
+      {activeTab === 'week' ? (
+        <section className="week-window" aria-labelledby="week-title">
+          <div className="week-window-heading">
+            <div>
+              <p className="eyebrow week-window-eyebrow">Wochenplan</p>
+              <h2 id="week-title">Diese Woche</h2>
+            </div>
+            <span>Woche ab {currentWeekStart}</span>
+          </div>
+
+          <div className="schedule-table" role="table" aria-label="Wochenplan">
+            <div className="schedule-row schedule-header" role="row">
+              <div className="schedule-day-cell" role="columnheader">Tag</div>
+              {mealSlots.map((slot) => (
+                <div className="schedule-slot-cell" key={slot} role="columnheader">{slotLabel(slot)}</div>
+              ))}
+            </div>
+
+            {dayOrder.map((day) => (
+              <div className="schedule-row" key={day} role="row">
+                <div className="schedule-day-cell" role="rowheader">{dayLabel(day)}</div>
+                {mealSlots.map((slot) => {
+                  const meal = weekMeals.find((entry) => entry.day === day && entry.slot === slot);
+
+                  return (
+                    <div className={meal ? 'schedule-meal-cell has-meal' : 'schedule-meal-cell'} key={slot} role="cell">
+                      {meal ? (
+                        <>
+                          <strong>{meal.recipeTitle}</strong>
+                          {meal.note ? <span>{meal.note}</span> : null}
+                        </>
+                      ) : (
+                        <span className="schedule-empty">Noch nicht geplant</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
           </div>
         </section>
       ) : null}
