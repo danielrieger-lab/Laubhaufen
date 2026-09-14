@@ -1,0 +1,1 @@
+{"name":"Laubhaufen","short_name":"Laubhaufen","description":"Gemeinsame Offline-PWA für Rezepte, Wochenplanung und Einkaufslisten.","start_url":".","display":"standalone","background_color":"#0d2f24","theme_color":"#0d2f24","lang":"de","scope":"/Laubhaufen/","icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}
