@@ -497,6 +497,34 @@ button {
   white-space: nowrap;
 }
 
+.shopping-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.shopping-item-actions button {
+  padding: 9px 12px;
+  border-radius: 12px;
+}
+
+.pantry-edit-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(100px, 0.6fr) minmax(120px, 0.8fr);
+  align-items: end;
+  gap: 10px;
+  width: 100%;
+}
+
+.pantry-edit-form label {
+  margin: 0;
+}
+
+.pantry-edit-form .recipe-actions {
+  grid-column: 1 / -1;
+  margin-top: 2px;
+}
+
 .shopping-delete {
   padding: 9px 12px;
   border-radius: 12px;
@@ -755,9 +783,13 @@ button.danger {
     grid-template-columns: minmax(0, 1fr) auto;
   }
 
-  .shopping-delete {
+  .shopping-item-actions {
     grid-column: 1 / -1;
     justify-self: start;
+  }
+
+  .pantry-edit-form {
+    grid-template-columns: 1fr;
   }
 
   .entry-card footer,

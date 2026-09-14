@@ -137,6 +137,8 @@ function App() {
   const [recipeDraft, setRecipeDraft] = useState({ title: '', servings: '4', prepTimeMinutes: '30', ingredients: '', instructions: '' });
   const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
+  const [editingPantryId, setEditingPantryId] = useState<string | null>(null);
+  const [editingPantry, setEditingPantry] = useState<PantryItem | null>(null);
   const [slotInputs, setSlotInputs] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -371,6 +373,38 @@ function App() {
 
     if (firebase) {
       void deletePantryItem(firebase.db, item.id).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
+    }
+  }
+
+  function startEditingPantry(item: PantryItem): void {
+    setEditingPantryId(item.id);
+    setEditingPantry({ ...item });
+  }
+
+  function cancelEditingPantry(): void {
+    setEditingPantryId(null);
+    setEditingPantry(null);
+  }
+
+  function saveEditedPantry(event: FormEvent<HTMLFormElement>): void {
+    event.preventDefault();
+
+    if (!editingPantry || !editingPantry.name.trim() || editingPantry.quantity < 0) {
+      return;
+    }
+
+    const nextItem = {
+      ...editingPantry,
+      name: editingPantry.name.trim(),
+      unit: editingPantry.unit.trim() || 'Stück',
+      updatedAt: Date.now()
+    };
+
+    setPantryItems((current) => current.map((item) => (item.id === nextItem.id ? nextItem : item)));
+    cancelEditingPantry();
+
+    if (firebase) {
+      void upsertPantryItem(firebase.db, nextItem).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
     }
   }
 
@@ -623,9 +657,35 @@ function App() {
             ) : (
               pantryItems.map((item) => (
                 <div className="shopping-item" key={item.id}>
-                  <span className="shopping-item-main">{item.name}</span>
-                  <span className="shopping-item-meta">{item.quantity} {item.unit}</span>
-                  <button type="button" className="button-danger shopping-delete" onClick={() => removePantryItem(item)} aria-label={`${item.name} aus der Vorratskammer löschen`}>Löschen</button>
+                  {editingPantryId === item.id && editingPantry ? (
+                    <form className="pantry-edit-form" onSubmit={saveEditedPantry}>
+                      <label>
+                        Zutat
+                        <input value={editingPantry.name} onChange={(event) => setEditingPantry((current) => current ? { ...current, name: event.target.value } : current)} required />
+                      </label>
+                      <label>
+                        Menge
+                        <input type="number" min="0" step="any" value={editingPantry.quantity} onChange={(event) => setEditingPantry((current) => current ? { ...current, quantity: Number(event.target.value) } : current)} required />
+                      </label>
+                      <label>
+                        Einheit
+                        <input value={editingPantry.unit} onChange={(event) => setEditingPantry((current) => current ? { ...current, unit: event.target.value } : current)} placeholder="Stück, Packung ..." />
+                      </label>
+                      <div className="recipe-actions">
+                        <button type="submit">Speichern</button>
+                        <button type="button" className="button-secondary" onClick={cancelEditingPantry}>Abbrechen</button>
+                      </div>
+                    </form>
+                  ) : (
+                    <>
+                      <span className="shopping-item-main">{item.name}</span>
+                      <span className="shopping-item-meta">{item.quantity} {item.unit}</span>
+                      <div className="shopping-item-actions">
+                        <button type="button" onClick={() => startEditingPantry(item)} aria-label={`${item.name} bearbeiten`}>Bearbeiten</button>
+                        <button type="button" className="button-danger" onClick={() => removePantryItem(item)} aria-label={`${item.name} aus der Vorratskammer löschen`}>Löschen</button>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))
             )}
