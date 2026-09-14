@@ -122,25 +122,26 @@ function subscribeToCollection<T>(
   db: Firestore,
   refFactory: (db: Firestore) => ReturnType<typeof collection>,
   normalize: (id: string, data: Record<string, unknown>) => T,
-  onItems: (items: T[]) => void
+  onItems: (items: T[]) => void,
+  onError?: (error: Error) => void
 ) {
   const itemsQuery = query(refFactory(db), orderBy('updatedAt', 'desc'));
 
   return onSnapshot(itemsQuery, (snapshot) => {
     onItems(snapshot.docs.map((document) => normalize(document.id, document.data() as Record<string, unknown>)));
-  });
+  }, onError);
 }
 
-export function subscribeToRecipes(db: Firestore, onRecipes: (recipes: Recipe[]) => void) {
-  return subscribeToCollection(db, recipesRef, normalizeRecipe, onRecipes);
+export function subscribeToRecipes(db: Firestore, onRecipes: (recipes: Recipe[]) => void, onError?: (error: Error) => void) {
+  return subscribeToCollection(db, recipesRef, normalizeRecipe, onRecipes, onError);
 }
 
-export function subscribeToWeeklyMeals(db: Firestore, onMeals: (meals: WeeklyMeal[]) => void) {
-  return subscribeToCollection(db, mealsRef, normalizeMeal, onMeals);
+export function subscribeToWeeklyMeals(db: Firestore, onMeals: (meals: WeeklyMeal[]) => void, onError?: (error: Error) => void) {
+  return subscribeToCollection(db, mealsRef, normalizeMeal, onMeals, onError);
 }
 
-export function subscribeToShoppingItems(db: Firestore, onItems: (items: ShoppingItem[]) => void) {
-  return subscribeToCollection(db, shoppingRef, normalizeShoppingItem, onItems);
+export function subscribeToShoppingItems(db: Firestore, onItems: (items: ShoppingItem[]) => void, onError?: (error: Error) => void) {
+  return subscribeToCollection(db, shoppingRef, normalizeShoppingItem, onItems, onError);
 }
 
 export async function upsertRecipe(db: Firestore, recipe: Recipe): Promise<void> {

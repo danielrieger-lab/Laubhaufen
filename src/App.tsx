@@ -139,12 +139,14 @@ function App() {
           return;
         }
 
-        unsubscribeRecipes = subscribeToRecipes(firebase.db, setRecipes);
-        unsubscribeMeals = subscribeToWeeklyMeals(firebase.db, setWeeklyMeals);
+        const handleSyncError = () => setSyncStatus('Synchronisierung nicht verfügbar');
+
+        unsubscribeRecipes = subscribeToRecipes(firebase.db, setRecipes, handleSyncError);
+        unsubscribeMeals = subscribeToWeeklyMeals(firebase.db, setWeeklyMeals, handleSyncError);
         unsubscribeShopping = subscribeToShoppingItems(firebase.db, (items) => {
           setShoppingItems(items);
           setSyncStatus('Gemeinsame Synchronisierung aktiv');
-        });
+        }, handleSyncError);
 
         await seedIfEmpty(firebase.db, {
           recipes: recipes.length > 0 ? recipes : starterRecipes,
@@ -188,7 +190,7 @@ function App() {
     setRecipeDraft({ title: '', servings: '4', prepTimeMinutes: '30', ingredients: '', instructions: '' });
 
     if (firebase) {
-      void upsertRecipe(firebase.db, recipe);
+      void upsertRecipe(firebase.db, recipe).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
     }
   }
 
