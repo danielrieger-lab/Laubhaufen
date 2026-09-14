@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import {
   deleteRecipe,
+  deleteWeeklyMeal,
   getFirebaseServices,
   seedIfEmpty,
   subscribeToRecipes,
   subscribeToShoppingItems,
   subscribeToWeeklyMeals,
-  upsertRecipe
+  upsertRecipe,
+  upsertWeeklyMeal
 } from './lib/firebase';
 import {
   createRecipe,
+  createWeeklyMeal,
   dayLabel,
   getMondayForDate,
   parseLines,
@@ -126,6 +129,7 @@ function App() {
   const [recipeDraft, setRecipeDraft] = useState({ title: '', servings: '4', prepTimeMinutes: '30', ingredients: '', instructions: '' });
   const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
+  const [slotInputs, setSlotInputs] = useState<Record<string, string>>({});
 
   useEffect(() => {
     saveAppState({ recipes, weeklyMeals, shoppingItems });
@@ -237,6 +241,41 @@ function App() {
 
     if (firebase) {
       void deleteRecipe(firebase.db, recipe.id).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
+    }
+  }
+
+  function setMealForSlot(day: DayKey, slot: MealSlot, recipeTitle: string): void {
+    const slotKey = `${day}-${slot}`;
+    setSlotInputs((current) => ({ ...current, [slotKey]: recipeTitle }));
+    const recipe = recipes.find((entry) => entry.title === recipeTitle.trim());
+    const existingMeal = weekMeals.find((entry) => entry.day === day && entry.slot === slot);
+
+    if (!recipe) {
+      if (!recipeTitle.trim() && existingMeal) {
+        setWeeklyMeals((current) => current.filter((entry) => entry.id !== existingMeal.id));
+        if (firebase) {
+          void deleteWeeklyMeal(firebase.db, existingMeal.id).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
+        }
+      }
+      return;
+    }
+
+    const meal = createWeeklyMeal({
+      weekStart: currentWeekStart,
+      day,
+      slot,
+      recipeId: recipe.id,
+      recipeTitle: recipe.title,
+      note: ''
+    });
+
+    setWeeklyMeals((current) => [
+      ...current.filter((entry) => !(entry.weekStart === currentWeekStart && entry.day === day && entry.slot === slot)),
+      meal
+    ]);
+
+    if (firebase) {
+      void upsertWeeklyMeal(firebase.db, meal).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
     }
   }
 
@@ -421,14 +460,19 @@ function App() {
 
                   return (
                     <div className={meal ? 'schedule-meal-cell has-meal' : 'schedule-meal-cell'} key={slot} role="cell">
-                      {meal ? (
-                        <>
-                          <strong>{meal.recipeTitle}</strong>
-                          {meal.note ? <span>{meal.note}</span> : null}
-                        </>
-                      ) : (
-                        <span className="schedule-empty">Noch nicht geplant</span>
-                      )}
+                      <span className="schedule-meal-label">{slotLabel(slot)}</span>
+                      <input
+                        className="slot-recipe-field"
+                        list={`recipes-${day}-${slot}`}
+                        value={slotInputs[`${day}-${slot}`] ?? meal?.recipeTitle ?? ''}
+                        onChange={(event) => setMealForSlot(day, slot, event.target.value)}
+                        placeholder="Rezept auswählen ..."
+                        aria-label={`${dayLabel(day)} ${slotLabel(slot)} Rezept`}
+                      />
+                      <datalist id={`recipes-${day}-${slot}`}>
+                        {recipes.map((recipe) => <option key={recipe.id} value={recipe.title} />)}
+                      </datalist>
+                      {!meal ? <span className="schedule-empty">Noch nicht geplant</span> : null}
                     </div>
                   );
                 })}

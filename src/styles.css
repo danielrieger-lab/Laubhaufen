@@ -359,6 +359,22 @@ button {
   font-size: 1.08rem;
 }
 
+.schedule-meal-label {
+  color: #7a4a2d;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.slot-recipe-field {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.86);
+}
+
 .schedule-meal-cell span {
   color: #5b6e62;
   font-size: 0.86rem;
