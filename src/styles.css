@@ -231,6 +231,36 @@ button {
   font-size: 0.88rem;
 }
 
+.recipe-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.recipe-actions button {
+  padding: 10px 13px;
+  border-radius: 14px;
+}
+
+.button-secondary {
+  background: #dfe7df;
+  color: #214234;
+}
+
+.button-danger {
+  background: #734430;
+}
+
+.recipe-edit-form {
+  display: grid;
+  gap: 8px;
+}
+
+.recipe-edit-form h3 {
+  margin-bottom: 6px;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

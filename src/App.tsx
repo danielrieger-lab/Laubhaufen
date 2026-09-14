@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import {
+  deleteRecipe,
   getFirebaseServices,
   seedIfEmpty,
   subscribeToRecipes,
@@ -118,6 +119,8 @@ function App() {
   const [activeTab, setActiveTab] = useState<'recipes' | 'week' | 'shopping' | null>(null);
   const [syncStatus, setSyncStatus] = useState(firebase ? 'Gemeinsame Synchronisierung wird verbunden ...' : 'Lokaler Modus');
   const [recipeDraft, setRecipeDraft] = useState({ title: '', servings: '4', prepTimeMinutes: '30', ingredients: '', instructions: '' });
+  const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
+  const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
 
   useEffect(() => {
     saveAppState({ recipes, weeklyMeals, shoppingItems });
@@ -191,6 +194,44 @@ function App() {
 
     if (firebase) {
       void upsertRecipe(firebase.db, recipe).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
+    }
+  }
+
+  function startEditingRecipe(recipe: Recipe): void {
+    setEditingRecipeId(recipe.id);
+    setEditingRecipe({ ...recipe });
+  }
+
+  function cancelEditingRecipe(): void {
+    setEditingRecipeId(null);
+    setEditingRecipe(null);
+  }
+
+  function saveEditedRecipe(event: FormEvent<HTMLFormElement>): void {
+    event.preventDefault();
+
+    if (!editingRecipe || !editingRecipe.title.trim()) {
+      return;
+    }
+
+    const nextRecipe = { ...editingRecipe, title: editingRecipe.title.trim(), updatedAt: Date.now() };
+    setRecipes((current) => current.map((recipe) => (recipe.id === nextRecipe.id ? nextRecipe : recipe)));
+    cancelEditingRecipe();
+
+    if (firebase) {
+      void upsertRecipe(firebase.db, nextRecipe).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
+    }
+  }
+
+  function removeRecipe(recipe: Recipe): void {
+    if (typeof window !== 'undefined' && !window.confirm(`„${recipe.title}“ wirklich löschen?`)) {
+      return;
+    }
+
+    setRecipes((current) => current.filter((entry) => entry.id !== recipe.id));
+
+    if (firebase) {
+      void deleteRecipe(firebase.db, recipe.id).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
     }
   }
 
@@ -289,21 +330,59 @@ function App() {
             <div className="recipe-list" aria-label="Vorhandene Rezepte">
               {recipes.map((recipe) => (
                 <article className="recipe-summary" key={recipe.id}>
-                  <div className="recipe-summary-heading">
-                    <h3>{recipe.title}</h3>
-                    <span>{recipe.servings} Portionen</span>
-                  </div>
-                  <p>{recipe.prepTimeMinutes} Minuten Zubereitungszeit</p>
-                  <div className="recipe-summary-columns">
-                    <div>
-                      <strong>Zutaten</strong>
-                      <span>{recipe.ingredients.length} Zutaten</span>
-                    </div>
-                    <div>
-                      <strong>Zubereitung</strong>
-                      <span>{recipe.instructions.length} Schritte</span>
-                    </div>
-                  </div>
+                  {editingRecipeId === recipe.id && editingRecipe ? (
+                    <form className="recipe-edit-form" onSubmit={saveEditedRecipe}>
+                      <h3>Rezept bearbeiten</h3>
+                      <label>
+                        Titel
+                        <input value={editingRecipe.title} onChange={(event) => setEditingRecipe((current) => current ? { ...current, title: event.target.value } : current)} required />
+                      </label>
+                      <div className="two-column">
+                        <label>
+                          Portionen
+                          <input type="number" min="1" value={editingRecipe.servings} onChange={(event) => setEditingRecipe((current) => current ? { ...current, servings: Number(event.target.value) } : current)} />
+                        </label>
+                        <label>
+                          Minuten
+                          <input type="number" min="1" value={editingRecipe.prepTimeMinutes} onChange={(event) => setEditingRecipe((current) => current ? { ...current, prepTimeMinutes: Number(event.target.value) } : current)} />
+                        </label>
+                      </div>
+                      <label>
+                        Zutaten, eine pro Zeile
+                        <textarea rows={4} value={editingRecipe.ingredients.join('\n')} onChange={(event) => setEditingRecipe((current) => current ? { ...current, ingredients: parseLines(event.target.value) } : current)} />
+                      </label>
+                      <label>
+                        Zubereitung, eine pro Zeile
+                        <textarea rows={4} value={editingRecipe.instructions.join('\n')} onChange={(event) => setEditingRecipe((current) => current ? { ...current, instructions: parseLines(event.target.value) } : current)} />
+                      </label>
+                      <div className="recipe-actions">
+                        <button type="submit">Änderungen speichern</button>
+                        <button type="button" className="button-secondary" onClick={cancelEditingRecipe}>Abbrechen</button>
+                      </div>
+                    </form>
+                  ) : (
+                    <>
+                      <div className="recipe-summary-heading">
+                        <h3>{recipe.title}</h3>
+                        <span>{recipe.servings} Portionen</span>
+                      </div>
+                      <p>{recipe.prepTimeMinutes} Minuten Zubereitungszeit</p>
+                      <div className="recipe-summary-columns">
+                        <div>
+                          <strong>Zutaten</strong>
+                          <span>{recipe.ingredients.length} Zutaten</span>
+                        </div>
+                        <div>
+                          <strong>Zubereitung</strong>
+                          <span>{recipe.instructions.length} Schritte</span>
+                        </div>
+                      </div>
+                      <div className="recipe-actions">
+                        <button type="button" onClick={() => startEditingRecipe(recipe)}>Bearbeiten</button>
+                        <button type="button" className="button-danger" onClick={() => removeRecipe(recipe)}>Löschen</button>
+                      </div>
+                    </>
+                  )}
                 </article>
               ))}
             </div>
