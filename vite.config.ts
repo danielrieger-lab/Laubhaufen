@@ -5,6 +5,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig(({ mode }) => ({
   root: 'src',
   publicDir: '../public',
+  envDir: '..',
   base: mode === 'production' ? '/Laubhaufen/' : '/',
   build: {
     outDir: '../dist',
