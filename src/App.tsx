@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import {
   deleteRecipe,
+  deletePantryItem,
   deleteShoppingItem,
   deleteWeeklyMeal,
   getFirebaseServices,
+  subscribeToPantryItems,
   seedIfEmpty,
   subscribeToRecipes,
   subscribeToShoppingItems,
   subscribeToWeeklyMeals,
   upsertRecipe,
+  upsertPantryItem,
   upsertShoppingItem,
   upsertWeeklyMeal
 } from './lib/firebase';
@@ -24,7 +27,7 @@ import {
   saveAppState,
   slotLabel,
 } from './lib/storage';
-import type { DayKey, MealSlot, Recipe, ShoppingItem, WeeklyMeal } from './lib/types';
+import type { DayKey, MealSlot, PantryItem, Recipe, ShoppingItem, WeeklyMeal } from './lib/types';
 
 const dayOrder: DayKey[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 const mealSlots: MealSlot[] = ['breakfast', 'lunch', 'dinner'];
@@ -128,7 +131,8 @@ function App() {
   const [recipes, setRecipes] = useState<Recipe[]>(persisted?.recipes ?? starterRecipes);
   const [weeklyMeals, setWeeklyMeals] = useState<WeeklyMeal[]>(persisted?.weeklyMeals ?? starterMeals);
   const [shoppingItems, setShoppingItems] = useState<ShoppingItem[]>(persisted?.shoppingItems ?? starterShopping);
-  const [activeTab, setActiveTab] = useState<'recipes' | 'week' | 'shopping' | null>(null);
+  const [pantryItems, setPantryItems] = useState<PantryItem[]>(persisted?.pantryItems ?? []);
+  const [activeTab, setActiveTab] = useState<'recipes' | 'week' | 'shopping' | 'pantry' | null>(null);
   const [syncStatus, setSyncStatus] = useState(firebase ? 'Gemeinsame Synchronisierung wird verbunden ...' : 'Lokaler Modus');
   const [recipeDraft, setRecipeDraft] = useState({ title: '', servings: '4', prepTimeMinutes: '30', ingredients: '', instructions: '' });
   const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
@@ -136,8 +140,8 @@ function App() {
   const [slotInputs, setSlotInputs] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    saveAppState({ recipes, weeklyMeals, shoppingItems });
-  }, [recipes, weeklyMeals, shoppingItems]);
+    saveAppState({ recipes, weeklyMeals, shoppingItems, pantryItems });
+  }, [recipes, weeklyMeals, shoppingItems, pantryItems]);
 
   useEffect(() => {
     if (!firebase) {
@@ -148,6 +152,7 @@ function App() {
     let unsubscribeRecipes: (() => void) | undefined;
     let unsubscribeMeals: (() => void) | undefined;
     let unsubscribeShopping: (() => void) | undefined;
+    let unsubscribePantry: (() => void) | undefined;
 
     void firebase.authReady
       .then(async () => {
@@ -163,11 +168,13 @@ function App() {
           setShoppingItems(items);
           setSyncStatus('Gemeinsame Synchronisierung aktiv');
         }, handleSyncError);
+        unsubscribePantry = subscribeToPantryItems(firebase.db, setPantryItems, handleSyncError);
 
         await seedIfEmpty(firebase.db, {
           recipes: recipes.length > 0 ? recipes : starterRecipes,
           weeklyMeals: weeklyMeals.length > 0 ? weeklyMeals : starterMeals,
           shoppingItems: shoppingItems.length > 0 ? shoppingItems : starterShopping
+          , pantryItems
         });
       })
       .catch(() => {
@@ -181,11 +188,24 @@ function App() {
       unsubscribeRecipes?.();
       unsubscribeMeals?.();
       unsubscribeShopping?.();
+      unsubscribePantry?.();
     };
   }, [firebase]);
 
   const weekMeals = useMemo(() => weeklyMeals.filter((meal) => meal.weekStart === currentWeekStart), [currentWeekStart, weeklyMeals]);
   const checkedCount = shoppingItems.filter((item) => item.checked).length;
+
+  function recipeAvailability(recipe: Recipe | undefined): 'complete' | 'partial' | 'missing' {
+    if (!recipe || recipe.ingredients.length === 0) {
+      return 'complete';
+    }
+
+    const pantryNames = new Set(pantryItems.map((item) => item.name.trim().toLocaleLowerCase('de-DE')));
+    const availableCount = recipe.ingredients.filter((ingredient) => pantryNames.has(ingredient.trim().toLocaleLowerCase('de-DE'))).length;
+    const ratio = availableCount / recipe.ingredients.length;
+
+    return ratio >= 1 ? 'complete' : ratio >= 0.5 ? 'partial' : 'missing';
+  }
 
   function handleRecipeSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
@@ -312,6 +332,24 @@ function App() {
   }
 
   function toggleShoppingItem(item: ShoppingItem): void {
+    if (!item.checked) {
+      const existingPantry = pantryItems.find((entry) => entry.name.trim().toLocaleLowerCase('de-DE') === item.name.trim().toLocaleLowerCase('de-DE'));
+      const pantryItem: PantryItem = existingPantry
+        ? { ...existingPantry, quantity: existingPantry.quantity + item.quantity, updatedAt: Date.now() }
+        : { id: item.id, name: item.name, quantity: item.quantity, unit: item.unit, createdAt: Date.now(), updatedAt: Date.now() };
+
+      setPantryItems((current) => existingPantry
+        ? current.map((entry) => (entry.id === existingPantry.id ? pantryItem : entry))
+        : [pantryItem, ...current]);
+      setShoppingItems((current) => current.filter((entry) => entry.id !== item.id));
+
+      if (firebase) {
+        void upsertPantryItem(firebase.db, pantryItem).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
+        void deleteShoppingItem(firebase.db, item.id).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
+      }
+      return;
+    }
+
     const nextItem = { ...item, checked: nextCheckState(item.checked), updatedAt: Date.now() };
     setShoppingItems((current) => current.map((entry) => (entry.id === item.id ? nextItem : entry)));
 
@@ -325,6 +363,14 @@ function App() {
 
     if (firebase) {
       void deleteShoppingItem(firebase.db, item.id).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
+    }
+  }
+
+  function removePantryItem(item: PantryItem): void {
+    setPantryItems((current) => current.filter((entry) => entry.id !== item.id));
+
+    if (firebase) {
+      void deletePantryItem(firebase.db, item.id).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
     }
   }
 
@@ -371,6 +417,9 @@ function App() {
         </button>
         <button className={activeTab === 'shopping' ? 'tab active' : 'tab'} onClick={() => setActiveTab('shopping')} type="button">
           Einkaufsliste
+        </button>
+        <button className={activeTab === 'pantry' ? 'tab active' : 'tab'} onClick={() => setActiveTab('pantry')} type="button">
+          Vorratskammer
         </button>
       </nav>
 
@@ -508,19 +557,17 @@ function App() {
                   const meal = weekMeals.find((entry) => entry.day === day && entry.slot === slot);
 
                   return (
-                    <div className={meal ? 'schedule-meal-cell has-meal' : 'schedule-meal-cell'} key={slot} role="cell">
+                    <div className={`schedule-meal-cell ${meal ? `has-meal recipe-${recipeAvailability(recipes.find((recipe) => recipe.id === meal.recipeId) ?? recipes[0])}` : ''}`} key={slot} role="cell">
                       <span className="schedule-meal-label">{slotLabel(slot)}</span>
-                      <input
+                      <select
                         className="slot-recipe-field"
-                        list={`recipes-${day}-${slot}`}
                         value={slotInputs[`${day}-${slot}`] ?? meal?.recipeTitle ?? ''}
                         onChange={(event) => setMealForSlot(day, slot, event.target.value)}
-                        placeholder="Rezept auswählen ..."
                         aria-label={`${dayLabel(day)} ${slotLabel(slot)} Rezept`}
-                      />
-                      <datalist id={`recipes-${day}-${slot}`}>
-                        {recipes.map((recipe) => <option key={recipe.id} value={recipe.title} />)}
-                      </datalist>
+                      >
+                        <option value="">Rezept auswählen ...</option>
+                        {recipes.map((recipe) => <option className={`recipe-option-${recipeAvailability(recipe)}`} key={recipe.id} value={recipe.title}>{recipe.title}</option>)}
+                      </select>
                       {!meal ? <span className="schedule-empty">Noch nicht geplant</span> : null}
                     </div>
                   );
@@ -553,6 +600,32 @@ function App() {
                   </label>
                   <span className="shopping-item-meta">{item.quantity} {item.unit}</span>
                   <button type="button" className="button-danger shopping-delete" onClick={() => removeShoppingItem(item)} aria-label={`${item.name} löschen`}>Löschen</button>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
+      ) : null}
+
+      {activeTab === 'pantry' ? (
+        <section className="shopping-window" aria-labelledby="pantry-title">
+          <div className="shopping-window-heading">
+            <div>
+              <p className="eyebrow shopping-window-eyebrow">Vorratskammer</p>
+              <h2 id="pantry-title">Vorhandene Zutaten</h2>
+            </div>
+            <span>{pantryItems.length} Zutaten vorhanden</span>
+          </div>
+
+          <div className="shopping-list" aria-label="Vorratskammer">
+            {pantryItems.length === 0 ? (
+              <p className="shopping-empty">Noch keine Zutaten in der Vorratskammer.</p>
+            ) : (
+              pantryItems.map((item) => (
+                <div className="shopping-item" key={item.id}>
+                  <span className="shopping-item-main">{item.name}</span>
+                  <span className="shopping-item-meta">{item.quantity} {item.unit}</span>
+                  <button type="button" className="button-danger shopping-delete" onClick={() => removePantryItem(item)} aria-label={`${item.name} aus der Vorratskammer löschen`}>Löschen</button>
                 </div>
               ))
             )}

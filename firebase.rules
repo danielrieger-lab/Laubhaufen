@@ -13,5 +13,9 @@ service cloud.firestore {
     match /shoppingItems/{itemId} {
       allow read, write: if request.auth != null;
     }
+
+    match /pantryItems/{itemId} {
+      allow read, write: if request.auth != null;
+    }
   }
 }

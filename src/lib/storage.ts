@@ -1,4 +1,4 @@
-import type { AppState, DayKey, MealSlot, Recipe, ShoppingItem, WeeklyMeal } from './types';
+import type { AppState, DayKey, MealSlot, PantryItem, Recipe, ShoppingItem, WeeklyMeal } from './types';
 
 const STORAGE_KEY = 'laubhaufen:state';
 
@@ -113,7 +113,8 @@ export function loadAppState(): AppState | null {
     return {
       recipes: parsed.recipes as Recipe[],
       weeklyMeals: parsed.weeklyMeals as WeeklyMeal[],
-      shoppingItems: parsed.shoppingItems as ShoppingItem[]
+      shoppingItems: parsed.shoppingItems as ShoppingItem[],
+      pantryItems: Array.isArray(parsed.pantryItems) ? parsed.pantryItems as PantryItem[] : []
     };
   } catch {
     return null;

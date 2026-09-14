@@ -36,8 +36,18 @@ export interface ShoppingItem {
   createdAt: number;
 }
 
+export interface PantryItem {
+  id: string;
+  name: string;
+  quantity: number;
+  unit: string;
+  updatedAt: number;
+  createdAt: number;
+}
+
 export interface AppState {
   recipes: Recipe[];
   weeklyMeals: WeeklyMeal[];
   shoppingItems: ShoppingItem[];
+  pantryItems: PantryItem[];
 }

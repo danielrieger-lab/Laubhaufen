@@ -12,7 +12,7 @@ import {
   setDoc,
   type Firestore
 } from 'firebase/firestore';
-import type { AppState, Recipe, ShoppingItem, WeeklyMeal } from './types';
+import type { AppState, PantryItem, Recipe, ShoppingItem, WeeklyMeal } from './types';
 
 type FirebaseConfig = {
   apiKey: string;
@@ -74,6 +74,10 @@ function shoppingRef(db: Firestore) {
   return collection(db, 'shoppingItems');
 }
 
+function pantryRef(db: Firestore) {
+  return collection(db, 'pantryItems');
+}
+
 function normalizeStrings(values: unknown): string[] {
   return Array.isArray(values) ? values.filter((value): value is string => typeof value === 'string') : [];
 }
@@ -118,6 +122,17 @@ function normalizeShoppingItem(id: string, data: Record<string, unknown>): Shopp
   };
 }
 
+function normalizePantryItem(id: string, data: Record<string, unknown>): PantryItem {
+  return {
+    id,
+    name: typeof data.name === 'string' ? data.name : 'Unbekannte Zutat',
+    quantity: typeof data.quantity === 'number' ? data.quantity : 1,
+    unit: typeof data.unit === 'string' ? data.unit : 'Stück',
+    createdAt: typeof data.createdAt === 'number' ? data.createdAt : Date.now(),
+    updatedAt: typeof data.updatedAt === 'number' ? data.updatedAt : Date.now()
+  };
+}
+
 function subscribeToCollection<T>(
   db: Firestore,
   refFactory: (db: Firestore) => ReturnType<typeof collection>,
@@ -144,6 +159,10 @@ export function subscribeToShoppingItems(db: Firestore, onItems: (items: Shoppin
   return subscribeToCollection(db, shoppingRef, normalizeShoppingItem, onItems, onError);
 }
 
+export function subscribeToPantryItems(db: Firestore, onItems: (items: PantryItem[]) => void, onError?: (error: Error) => void) {
+  return subscribeToCollection(db, pantryRef, normalizePantryItem, onItems, onError);
+}
+
 export async function upsertRecipe(db: Firestore, recipe: Recipe): Promise<void> {
   await setDoc(doc(recipesRef(db), recipe.id), recipe);
 }
@@ -154,6 +173,10 @@ export async function upsertWeeklyMeal(db: Firestore, meal: WeeklyMeal): Promise
 
 export async function upsertShoppingItem(db: Firestore, item: ShoppingItem): Promise<void> {
   await setDoc(doc(shoppingRef(db), item.id), item);
+}
+
+export async function upsertPantryItem(db: Firestore, item: PantryItem): Promise<void> {
+  await setDoc(doc(pantryRef(db), item.id), item);
 }
 
 export async function deleteRecipe(db: Firestore, recipeId: string): Promise<void> {
@@ -168,11 +191,16 @@ export async function deleteShoppingItem(db: Firestore, itemId: string): Promise
   await deleteDoc(doc(shoppingRef(db), itemId));
 }
 
+export async function deletePantryItem(db: Firestore, itemId: string): Promise<void> {
+  await deleteDoc(doc(pantryRef(db), itemId));
+}
+
 export async function seedIfEmpty(db: Firestore, state: AppState): Promise<void> {
-  const [recipesSnap, mealsSnap, shoppingSnap] = await Promise.all([
+  const [recipesSnap, mealsSnap, shoppingSnap, pantrySnap] = await Promise.all([
     getDocs(recipesRef(db)),
     getDocs(mealsRef(db)),
-    getDocs(shoppingRef(db))
+    getDocs(shoppingRef(db)),
+    getDocs(pantryRef(db))
   ]);
 
   const writes: Promise<void>[] = [];
@@ -187,6 +215,10 @@ export async function seedIfEmpty(db: Firestore, state: AppState): Promise<void>
 
   if (shoppingSnap.empty) {
     writes.push(...state.shoppingItems.map((item) => upsertShoppingItem(db, item)));
+  }
+
+  if (pantrySnap.empty) {
+    writes.push(...state.pantryItems.map((item) => upsertPantryItem(db, item)));
   }
 
   await Promise.all(writes);
