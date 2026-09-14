@@ -1,18 +1,15 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import {
   deleteRecipe,
-  deleteWeeklyMeal,
   getFirebaseServices,
   seedIfEmpty,
   subscribeToRecipes,
   subscribeToShoppingItems,
   subscribeToWeeklyMeals,
-  upsertRecipe,
-  upsertWeeklyMeal
+  upsertRecipe
 } from './lib/firebase';
 import {
   createRecipe,
-  createWeeklyMeal,
   dayLabel,
   getMondayForDate,
   parseLines,
@@ -129,7 +126,6 @@ function App() {
   const [recipeDraft, setRecipeDraft] = useState({ title: '', servings: '4', prepTimeMinutes: '30', ingredients: '', instructions: '' });
   const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
-  const [slotSearches, setSlotSearches] = useState<Record<string, string>>({});
 
   useEffect(() => {
     saveAppState({ recipes, weeklyMeals, shoppingItems });
@@ -241,37 +237,6 @@ function App() {
 
     if (firebase) {
       void deleteRecipe(firebase.db, recipe.id).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
-    }
-  }
-
-  function setMealForSlot(day: DayKey, slot: MealSlot, recipeId: string): void {
-    const recipe = recipes.find((entry) => entry.id === recipeId);
-    const existingMeal = weekMeals.find((entry) => entry.day === day && entry.slot === slot);
-
-    if (!recipe) {
-      if (existingMeal && firebase) {
-        void deleteWeeklyMeal(firebase.db, existingMeal.id).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
-      }
-      setWeeklyMeals((current) => current.filter((entry) => entry.id !== existingMeal?.id));
-      return;
-    }
-
-    const meal: WeeklyMeal = createWeeklyMeal({
-      weekStart: currentWeekStart,
-      day,
-      slot,
-      recipeId: recipe.id,
-      recipeTitle: recipe.title,
-      note: ''
-    });
-
-    setWeeklyMeals((current) => [
-      ...current.filter((entry) => !(entry.weekStart === currentWeekStart && entry.day === day && entry.slot === slot)),
-      meal
-    ]);
-
-    if (firebase) {
-      void upsertWeeklyMeal(firebase.db, meal).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
     }
   }
 
@@ -453,29 +418,17 @@ function App() {
                 <div className="schedule-day-cell" role="rowheader">{dayLabel(day)}</div>
                 {mealSlots.map((slot) => {
                   const meal = weekMeals.find((entry) => entry.day === day && entry.slot === slot);
-                  const slotKey = `${day}-${slot}`;
-                  const slotSearch = slotSearches[slotKey] ?? '';
-                  const filteredSlotRecipes = recipes.filter((recipe) => recipe.title.toLocaleLowerCase('de-DE').includes(slotSearch.toLocaleLowerCase('de-DE')));
 
                   return (
                     <div className={meal ? 'schedule-meal-cell has-meal' : 'schedule-meal-cell'} key={slot} role="cell">
-                      <span className="schedule-meal-label">{slotLabel(slot)}</span>
-                      <input
-                        className="slot-recipe-search"
-                        value={slotSearch}
-                        onChange={(event) => setSlotSearches((current) => ({ ...current, [slotKey]: event.target.value }))}
-                        placeholder="Rezept suchen ..."
-                        aria-label={`${dayLabel(day)} ${slotLabel(slot)} Rezept suchen`}
-                      />
-                      <select
-                        value={meal?.recipeId ?? ''}
-                        onChange={(event) => setMealForSlot(day, slot, event.target.value)}
-                        aria-label={`${dayLabel(day)} ${slotLabel(slot)} Rezept auswählen`}
-                      >
-                        <option value="">{meal ? 'Rezept entfernen' : 'Rezept auswählen'}</option>
-                        {filteredSlotRecipes.map((recipe) => <option key={recipe.id} value={recipe.id}>{recipe.title}</option>)}
-                      </select>
-                      {meal?.note ? <span>{meal.note}</span> : null}
+                      {meal ? (
+                        <>
+                          <strong>{meal.recipeTitle}</strong>
+                          {meal.note ? <span>{meal.note}</span> : null}
+                        </>
+                      ) : (
+                        <span className="schedule-empty">Noch nicht geplant</span>
+                      )}
                     </div>
                   );
                 })}
