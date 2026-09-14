@@ -170,7 +170,6 @@ function App() {
       <section className="hero-card hero-card--wide">
         <div className="hero-copy">
           <p className="eyebrow">Laubhaufen</p>
-          <h1>Rezepte, Wochenplanung und Einkaufslisten in einer gemeinsamen PWA.</h1>
 
           <div className="hero-meta">
             <span>{syncStatus}</span>
