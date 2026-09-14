@@ -339,8 +339,12 @@ button {
 }
 
 .schedule-slot-cell {
-  min-height: 0;
-  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  min-height: 84px;
+  padding: 14px;
+  color: #173b2d;
+  font-weight: 800;
 }
 
 .schedule-meal-cell {
