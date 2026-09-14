@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import {
   deleteRecipe,
+  deleteShoppingItem,
   deleteWeeklyMeal,
   getFirebaseServices,
   seedIfEmpty,
@@ -8,15 +9,18 @@ import {
   subscribeToShoppingItems,
   subscribeToWeeklyMeals,
   upsertRecipe,
+  upsertShoppingItem,
   upsertWeeklyMeal
 } from './lib/firebase';
 import {
   createRecipe,
+  createShoppingItem,
   createWeeklyMeal,
   dayLabel,
   getMondayForDate,
   parseLines,
   loadAppState,
+  nextCheckState,
   saveAppState,
   slotLabel,
 } from './lib/storage';
@@ -277,6 +281,51 @@ function App() {
     if (firebase) {
       void upsertWeeklyMeal(firebase.db, meal).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
     }
+
+    addRecipeIngredientsToShopping(recipe);
+  }
+
+  function addRecipeIngredientsToShopping(recipe: Recipe): void {
+    const existingNames = new Set(shoppingItems.map((item) => item.name.trim().toLocaleLowerCase('de-DE')));
+    const newItems = recipe.ingredients
+      .map((ingredient) => ingredient.trim())
+      .filter((ingredient) => ingredient && !existingNames.has(ingredient.toLocaleLowerCase('de-DE')))
+      .map((ingredient) => createShoppingItem({
+        name: ingredient,
+        quantity: 1,
+        unit: 'Stück',
+        aisle: 'Allgemein'
+      }));
+
+    if (newItems.length === 0) {
+      return;
+    }
+
+    setShoppingItems((current) => [
+      ...newItems.filter((item) => !current.some((entry) => entry.name.toLocaleLowerCase('de-DE') === item.name.toLocaleLowerCase('de-DE'))),
+      ...current
+    ]);
+
+    if (firebase) {
+      void Promise.all(newItems.map((item) => upsertShoppingItem(firebase.db, item))).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
+    }
+  }
+
+  function toggleShoppingItem(item: ShoppingItem): void {
+    const nextItem = { ...item, checked: nextCheckState(item.checked), updatedAt: Date.now() };
+    setShoppingItems((current) => current.map((entry) => (entry.id === item.id ? nextItem : entry)));
+
+    if (firebase) {
+      void upsertShoppingItem(firebase.db, nextItem).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
+    }
+  }
+
+  function removeShoppingItem(item: ShoppingItem): void {
+    setShoppingItems((current) => current.filter((entry) => entry.id !== item.id));
+
+    if (firebase) {
+      void deleteShoppingItem(firebase.db, item.id).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
+    }
   }
 
   return (
@@ -478,6 +527,35 @@ function App() {
                 })}
               </div>
             ))}
+          </div>
+        </section>
+      ) : null}
+
+      {activeTab === 'shopping' ? (
+        <section className="shopping-window" aria-labelledby="shopping-title">
+          <div className="shopping-window-heading">
+            <div>
+              <p className="eyebrow shopping-window-eyebrow">Einkaufsliste</p>
+              <h2 id="shopping-title">Benötigte Zutaten</h2>
+            </div>
+            <span>{checkedCount} von {shoppingItems.length} erledigt</span>
+          </div>
+
+          <div className="shopping-list" aria-label="Einkaufsartikel">
+            {shoppingItems.length === 0 ? (
+              <p className="shopping-empty">Noch keine Zutaten auf der Einkaufsliste.</p>
+            ) : (
+              shoppingItems.map((item) => (
+                <div className={item.checked ? 'shopping-item checked' : 'shopping-item'} key={item.id}>
+                  <label className="shopping-item-main">
+                    <input type="checkbox" checked={item.checked} onChange={() => toggleShoppingItem(item)} />
+                    <span>{item.name}</span>
+                  </label>
+                  <span className="shopping-item-meta">{item.quantity} {item.unit}</span>
+                  <button type="button" className="button-danger shopping-delete" onClick={() => removeShoppingItem(item)} aria-label={`${item.name} löschen`}>Löschen</button>
+                </div>
+              ))
+            )}
           </div>
         </section>
       ) : null}

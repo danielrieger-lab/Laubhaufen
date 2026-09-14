@@ -385,6 +385,104 @@ button {
   font-style: italic;
 }
 
+.shopping-window {
+  margin-top: 24px;
+  padding: 24px;
+  border: 1px solid rgba(20, 35, 28, 0.1);
+  border-radius: 28px;
+  background: rgba(255, 252, 246, 0.94);
+  box-shadow: 0 24px 60px rgba(3, 18, 12, 0.28);
+}
+
+.shopping-window-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.shopping-window-heading h2 {
+  margin: 0;
+  color: #173b2d;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+}
+
+.shopping-window-heading > span {
+  color: #5b6e62;
+  font-weight: 700;
+}
+
+.shopping-window-eyebrow {
+  margin-bottom: 6px;
+  color: #7a4a2d;
+  font-size: 0.78rem;
+  line-height: 1;
+  letter-spacing: 0.18em;
+  max-width: none;
+  text-transform: uppercase;
+}
+
+.shopping-list {
+  display: grid;
+  gap: 10px;
+}
+
+.shopping-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid rgba(20, 35, 28, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.shopping-item.checked {
+  background: rgba(33, 66, 52, 0.08);
+}
+
+.shopping-item.checked .shopping-item-main span {
+  color: #718078;
+  text-decoration: line-through;
+}
+
+.shopping-item-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: #173b2d;
+  font-weight: 700;
+}
+
+.shopping-item-main input {
+  width: 18px;
+  height: 18px;
+  accent-color: #214234;
+}
+
+.shopping-item-meta {
+  color: #5b6e62;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.shopping-delete {
+  padding: 9px 12px;
+  border-radius: 12px;
+}
+
+.shopping-empty {
+  margin: 0;
+  padding: 18px;
+  border-radius: 16px;
+  color: #5b6e62;
+  background: rgba(33, 66, 52, 0.06);
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -614,6 +712,25 @@ button.danger {
   .week-window-heading {
     align-items: start;
     flex-direction: column;
+  }
+
+  .shopping-window {
+    padding: 18px;
+    border-radius: 22px;
+  }
+
+  .shopping-window-heading {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .shopping-item {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .shopping-delete {
+    grid-column: 1 / -1;
+    justify-self: start;
   }
 
   .entry-card footer,
