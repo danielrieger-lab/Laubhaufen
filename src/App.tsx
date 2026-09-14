@@ -423,7 +423,7 @@ function App() {
           Rezepte
         </button>
         <button className={activeTab === 'week' ? 'tab active' : 'tab'} onClick={() => setActiveTab('week')} type="button">
-          Wochenplan
+          Speiseplan
         </button>
         <button className={activeTab === 'shopping' ? 'tab active' : 'tab'} onClick={() => setActiveTab('shopping')} type="button">
           Einkaufsliste
