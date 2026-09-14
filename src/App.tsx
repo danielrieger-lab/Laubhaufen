@@ -19,6 +19,7 @@ import {
   createRecipe,
   createShoppingItem,
   createWeeklyMeal,
+  createId,
   dayLabel,
   getMondayForDate,
   parseLines,
@@ -140,6 +141,8 @@ function App() {
   const [editingPantryId, setEditingPantryId] = useState<string | null>(null);
   const [editingPantry, setEditingPantry] = useState<PantryItem | null>(null);
   const [slotInputs, setSlotInputs] = useState<Record<string, string>>({});
+  const [shoppingDraft, setShoppingDraft] = useState({ name: '', quantity: '1', unit: 'Stück' });
+  const [pantryDraft, setPantryDraft] = useState({ name: '', quantity: '1', unit: 'Stück' });
 
   useEffect(() => {
     saveAppState({ recipes, weeklyMeals, shoppingItems, pantryItems });
@@ -373,6 +376,51 @@ function App() {
 
     if (firebase) {
       void deletePantryItem(firebase.db, item.id).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
+    }
+  }
+
+  function addShoppingItem(event: FormEvent<HTMLFormElement>): void {
+    event.preventDefault();
+
+    if (!shoppingDraft.name.trim()) {
+      return;
+    }
+
+    const item = createShoppingItem({
+      name: shoppingDraft.name.trim(),
+      quantity: Math.max(0, Number(shoppingDraft.quantity) || 1),
+      unit: shoppingDraft.unit.trim() || 'Stück',
+      aisle: 'Manuell'
+    });
+
+    setShoppingItems((current) => [item, ...current]);
+    setShoppingDraft({ name: '', quantity: '1', unit: 'Stück' });
+
+    if (firebase) {
+      void upsertShoppingItem(firebase.db, item).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
+    }
+  }
+
+  function addPantryItem(event: FormEvent<HTMLFormElement>): void {
+    event.preventDefault();
+
+    if (!pantryDraft.name.trim()) {
+      return;
+    }
+
+    const normalizedName = pantryDraft.name.trim().toLocaleLowerCase('de-DE');
+    const existingItem = pantryItems.find((item) => item.name.trim().toLocaleLowerCase('de-DE') === normalizedName);
+    const item: PantryItem = existingItem
+      ? { ...existingItem, quantity: existingItem.quantity + Math.max(0, Number(pantryDraft.quantity) || 1), unit: pantryDraft.unit.trim() || existingItem.unit, updatedAt: Date.now() }
+      : { id: createId(), name: pantryDraft.name.trim(), quantity: Math.max(0, Number(pantryDraft.quantity) || 1), unit: pantryDraft.unit.trim() || 'Stück', createdAt: Date.now(), updatedAt: Date.now() };
+
+    setPantryItems((current) => existingItem
+      ? current.map((entry) => (entry.id === existingItem.id ? item : entry))
+      : [item, ...current]);
+    setPantryDraft({ name: '', quantity: '1', unit: 'Stück' });
+
+    if (firebase) {
+      void upsertPantryItem(firebase.db, item).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
     }
   }
 
@@ -622,6 +670,13 @@ function App() {
             <span>{checkedCount} von {shoppingItems.length} erledigt</span>
           </div>
 
+          <form className="manual-item-form" onSubmit={addShoppingItem}>
+            <input value={shoppingDraft.name} onChange={(event) => setShoppingDraft((current) => ({ ...current, name: event.target.value }))} placeholder="Zutat" aria-label="Zutat" required />
+            <input value={shoppingDraft.quantity} onChange={(event) => setShoppingDraft((current) => ({ ...current, quantity: event.target.value }))} type="number" min="0" step="any" placeholder="Menge" aria-label="Menge" required />
+            <input value={shoppingDraft.unit} onChange={(event) => setShoppingDraft((current) => ({ ...current, unit: event.target.value }))} placeholder="Einheit" aria-label="Einheit" />
+            <button type="submit">Zutat hinzufügen</button>
+          </form>
+
           <div className="shopping-list" aria-label="Einkaufsartikel">
             {shoppingItems.length === 0 ? (
               <p className="shopping-empty">Noch keine Zutaten auf der Einkaufsliste.</p>
@@ -650,6 +705,13 @@ function App() {
             </div>
             <span>{pantryItems.length} Zutaten vorhanden</span>
           </div>
+
+          <form className="manual-item-form" onSubmit={addPantryItem}>
+            <input value={pantryDraft.name} onChange={(event) => setPantryDraft((current) => ({ ...current, name: event.target.value }))} placeholder="Zutat" aria-label="Zutat" required />
+            <input value={pantryDraft.quantity} onChange={(event) => setPantryDraft((current) => ({ ...current, quantity: event.target.value }))} type="number" min="0" step="any" placeholder="Menge" aria-label="Menge" required />
+            <input value={pantryDraft.unit} onChange={(event) => setPantryDraft((current) => ({ ...current, unit: event.target.value }))} placeholder="Einheit" aria-label="Einheit" />
+            <button type="submit">Zutat hinzufügen</button>
+          </form>
 
           <div className="shopping-list" aria-label="Vorratskammer">
             {pantryItems.length === 0 ? (

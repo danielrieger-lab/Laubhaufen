@@ -456,6 +456,17 @@ button {
   gap: 10px;
 }
 
+.manual-item-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(90px, 0.6fr) minmax(110px, 0.8fr) auto;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.manual-item-form input {
+  min-width: 0;
+}
+
 .shopping-item {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
@@ -781,6 +792,15 @@ button.danger {
 
   .shopping-item {
     grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .manual-item-form {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .manual-item-form input:first-child,
+  .manual-item-form button {
+    grid-column: 1 / -1;
   }
 
   .shopping-item-actions {
