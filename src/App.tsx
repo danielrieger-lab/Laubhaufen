@@ -6,10 +6,12 @@ import {
   subscribeToRecipes,
   subscribeToShoppingItems,
   subscribeToWeeklyMeals,
-  upsertRecipe
+  upsertRecipe,
+  upsertWeeklyMeal
 } from './lib/firebase';
 import {
   createRecipe,
+  createWeeklyMeal,
   dayLabel,
   getMondayForDate,
   parseLines,
@@ -126,6 +128,11 @@ function App() {
   const [recipeDraft, setRecipeDraft] = useState({ title: '', servings: '4', prepTimeMinutes: '30', ingredients: '', instructions: '' });
   const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
+  const [mealDraft, setMealDraft] = useState<{ day: DayKey; slot: MealSlot; recipeId: string }>({
+    day: 'monday',
+    slot: 'dinner',
+    recipeId: ''
+  });
 
   useEffect(() => {
     saveAppState({ recipes, weeklyMeals, shoppingItems });
@@ -237,6 +244,35 @@ function App() {
 
     if (firebase) {
       void deleteRecipe(firebase.db, recipe.id).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
+    }
+  }
+
+  function addMealToWeek(event: FormEvent<HTMLFormElement>): void {
+    event.preventDefault();
+
+    const recipe = recipes.find((entry) => entry.id === mealDraft.recipeId);
+
+    if (!recipe) {
+      return;
+    }
+
+    const meal: WeeklyMeal = createWeeklyMeal({
+      weekStart: currentWeekStart,
+      day: mealDraft.day,
+      slot: mealDraft.slot,
+      recipeId: recipe.id,
+      recipeTitle: recipe.title,
+      note: ''
+    });
+
+    setWeeklyMeals((current) => [
+      ...current.filter((entry) => !(entry.weekStart === currentWeekStart && entry.day === meal.day && entry.slot === meal.slot)),
+      meal
+    ]);
+    setMealDraft((current) => ({ ...current, recipeId: '' }));
+
+    if (firebase) {
+      void upsertWeeklyMeal(firebase.db, meal).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
     }
   }
 
@@ -404,6 +440,29 @@ function App() {
             </div>
             <span>Woche ab {currentWeekStart}</span>
           </div>
+
+          <form className="week-planner-form" onSubmit={addMealToWeek}>
+            <label>
+              Rezept
+              <select value={mealDraft.recipeId} onChange={(event) => setMealDraft((current) => ({ ...current, recipeId: event.target.value }))} required>
+                <option value="">Rezept auswählen</option>
+                {recipes.map((recipe) => <option key={recipe.id} value={recipe.id}>{recipe.title}</option>)}
+              </select>
+            </label>
+            <label>
+              Tag
+              <select value={mealDraft.day} onChange={(event) => setMealDraft((current) => ({ ...current, day: event.target.value as DayKey }))}>
+                {dayOrder.map((day) => <option key={day} value={day}>{dayLabel(day)}</option>)}
+              </select>
+            </label>
+            <label>
+              Mahlzeit
+              <select value={mealDraft.slot} onChange={(event) => setMealDraft((current) => ({ ...current, slot: event.target.value as MealSlot }))}>
+                {mealSlots.map((slot) => <option key={slot} value={slot}>{slotLabel(slot)}</option>)}
+              </select>
+            </label>
+            <button type="submit">Einplanen</button>
+          </form>
 
           <div className="schedule-table" role="table" aria-label="Wochenplan">
             <div className="schedule-row schedule-header" role="row">

@@ -290,6 +290,26 @@ button {
   font-weight: 700;
 }
 
+.week-planner-form {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.5fr) repeat(2, minmax(150px, 1fr)) auto;
+  align-items: end;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid rgba(20, 35, 28, 0.08);
+  border-radius: 20px;
+  background: rgba(33, 66, 52, 0.06);
+}
+
+.week-planner-form label {
+  margin-bottom: 0;
+}
+
+.week-planner-form button {
+  white-space: nowrap;
+}
+
 .week-window-eyebrow {
   margin-bottom: 6px;
   color: #7a4a2d;
@@ -598,6 +618,10 @@ button.danger {
   .week-window-heading {
     align-items: start;
     flex-direction: column;
+  }
+
+  .week-planner-form {
+    grid-template-columns: 1fr;
   }
 
   .entry-card footer,
