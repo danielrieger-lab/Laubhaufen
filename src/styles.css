@@ -308,9 +308,9 @@ button {
 
 .schedule-row {
   display: grid;
-  grid-template-columns: minmax(110px, 0.7fr) repeat(3, minmax(170px, 1fr));
+  grid-template-columns: minmax(130px, 0.7fr) repeat(7, minmax(130px, 1fr));
   gap: 8px;
-  min-width: 700px;
+  min-width: 1050px;
 }
 
 .schedule-header {
@@ -334,6 +334,8 @@ button {
   align-items: center;
   color: #173b2d;
   font-weight: 800;
+  justify-content: center;
+  text-align: center;
 }
 
 .schedule-slot-cell {

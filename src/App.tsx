@@ -554,21 +554,20 @@ function App() {
 
           <div className="schedule-table" role="table" aria-label="Wochenplan">
             <div className="schedule-row schedule-header" role="row">
-              <div className="schedule-day-cell" role="columnheader">Tag</div>
-              {mealSlots.map((slot) => (
-                <div className="schedule-slot-cell" key={slot} role="columnheader">{slotLabel(slot)}</div>
+              <div className="schedule-slot-cell" role="columnheader">Mahlzeit</div>
+              {dayOrder.map((day) => (
+                <div className="schedule-day-cell" key={day} role="columnheader">{dayLabel(day)}</div>
               ))}
             </div>
 
-            {dayOrder.map((day) => (
-              <div className="schedule-row" key={day} role="row">
-                <div className="schedule-day-cell" role="rowheader">{dayLabel(day)}</div>
-                {mealSlots.map((slot) => {
+            {mealSlots.map((slot) => (
+              <div className="schedule-row" key={slot} role="row">
+                <div className="schedule-slot-cell" role="rowheader">{slotLabel(slot)}</div>
+                {dayOrder.map((day) => {
                   const meal = weekMeals.find((entry) => entry.day === day && entry.slot === slot);
 
                   return (
                     <div className={`schedule-meal-cell ${meal ? `has-meal recipe-${recipeAvailability(recipes.find((recipe) => recipe.id === meal.recipeId) ?? recipes[0])}` : ''}`} key={slot} role="cell">
-                      <span className="schedule-meal-label">{slotLabel(slot)}</span>
                       <select
                         className="slot-recipe-field"
                         value={slotInputs[`${day}-${slot}`] ?? meal?.recipeTitle ?? ''}
