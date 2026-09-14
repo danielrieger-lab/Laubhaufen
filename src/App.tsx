@@ -133,6 +133,9 @@ function App() {
     slot: 'dinner',
     recipeId: ''
   });
+  const [recipeSearch, setRecipeSearch] = useState('');
+  const [daySearch, setDaySearch] = useState('');
+  const [mealSearch, setMealSearch] = useState('');
 
   useEffect(() => {
     saveAppState({ recipes, weeklyMeals, shoppingItems });
@@ -275,6 +278,10 @@ function App() {
       void upsertWeeklyMeal(firebase.db, meal).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
     }
   }
+
+  const filteredRecipes = recipes.filter((recipe) => recipe.title.toLocaleLowerCase('de-DE').includes(recipeSearch.toLocaleLowerCase('de-DE')));
+  const filteredDays = dayOrder.filter((day) => dayLabel(day).toLocaleLowerCase('de-DE').includes(daySearch.toLocaleLowerCase('de-DE')));
+  const filteredMealSlots = mealSlots.filter((slot) => slotLabel(slot).toLocaleLowerCase('de-DE').includes(mealSearch.toLocaleLowerCase('de-DE')));
 
   return (
     <main className="app-shell">
@@ -444,21 +451,24 @@ function App() {
           <form className="week-planner-form" onSubmit={addMealToWeek}>
             <label>
               Rezept
+              <input value={recipeSearch} onChange={(event) => setRecipeSearch(event.target.value)} placeholder="Rezept suchen ..." />
               <select value={mealDraft.recipeId} onChange={(event) => setMealDraft((current) => ({ ...current, recipeId: event.target.value }))} required>
                 <option value="">Rezept auswählen</option>
-                {recipes.map((recipe) => <option key={recipe.id} value={recipe.id}>{recipe.title}</option>)}
+                {filteredRecipes.map((recipe) => <option key={recipe.id} value={recipe.id}>{recipe.title}</option>)}
               </select>
             </label>
             <label>
               Tag
+              <input value={daySearch} onChange={(event) => setDaySearch(event.target.value)} placeholder="Tag suchen ..." />
               <select value={mealDraft.day} onChange={(event) => setMealDraft((current) => ({ ...current, day: event.target.value as DayKey }))}>
-                {dayOrder.map((day) => <option key={day} value={day}>{dayLabel(day)}</option>)}
+                {filteredDays.map((day) => <option key={day} value={day}>{dayLabel(day)}</option>)}
               </select>
             </label>
             <label>
               Mahlzeit
+              <input value={mealSearch} onChange={(event) => setMealSearch(event.target.value)} placeholder="Mahlzeit suchen ..." />
               <select value={mealDraft.slot} onChange={(event) => setMealDraft((current) => ({ ...current, slot: event.target.value as MealSlot }))}>
-                {mealSlots.map((slot) => <option key={slot} value={slot}>{slotLabel(slot)}</option>)}
+                {filteredMealSlots.map((slot) => <option key={slot} value={slot}>{slotLabel(slot)}</option>)}
               </select>
             </label>
             <button type="submit">Einplanen</button>
