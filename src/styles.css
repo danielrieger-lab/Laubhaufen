@@ -244,8 +244,8 @@ button {
 }
 
 .button-secondary {
-  background: #dfe7df;
-  color: #214234;
+  background: #ead8c8;
+  color: #5b3828;
 }
 
 .button-danger {
@@ -641,7 +641,7 @@ button {
   border: none;
   border-radius: 18px;
   padding: 13px 16px;
-  background: #214234;
+  background: #7a4a2d;
   color: #fff;
   font-weight: 700;
   transition: transform 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
@@ -649,7 +649,7 @@ button {
 
 button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 14px 30px rgba(33, 66, 52, 0.18);
+  box-shadow: 0 14px 30px rgba(91, 56, 40, 0.24);
 }
 
 button.danger {
