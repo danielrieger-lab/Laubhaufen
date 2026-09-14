@@ -32,83 +32,8 @@ import type { DayKey, MealSlot, PantryItem, Recipe, ShoppingItem, WeeklyMeal } f
 
 const dayOrder: DayKey[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 const mealSlots: MealSlot[] = ['breakfast', 'lunch', 'dinner'];
-
-function createStarterRecipes(): Recipe[] {
-  const now = Date.now();
-
-  return [
-    {
-      id: 'starter-overnight-oats',
-      title: 'Overnight Oats',
-      servings: 4,
-      prepTimeMinutes: 10,
-      ingredients: ['Haferflocken', 'Milch oder Pflanzenmilch', 'Joghurt', 'Beeren', 'Honig'],
-      instructions: ['Haferflocken und Flüssigkeit mischen.', 'Über Nacht kalt stellen.', 'Vor dem Servieren mit Beeren garnieren.'],
-      createdAt: now,
-      updatedAt: now
-    },
-    {
-      id: 'starter-vegetable-pasta',
-      title: 'Gemüsepasta',
-      servings: 4,
-      prepTimeMinutes: 25,
-      ingredients: ['Nudeln', 'Zucchini', 'Tomaten', 'Olivenöl', 'Knoblauch'],
-      instructions: ['Nudeln kochen.', 'Gemüse anbraten.', 'Alles vermengen und abschmecken.'],
-      createdAt: now,
-      updatedAt: now
-    },
-    {
-      id: 'starter-sheet-pan-tacos',
-      title: 'Tacos vom Blech',
-      servings: 4,
-      prepTimeMinutes: 35,
-      ingredients: ['Tortillas', 'Bohnen', 'Paprika', 'Zwiebel', 'Salsa'],
-      instructions: ['Füllung rösten.', 'Tortillas erwärmen.', 'Mit Salsa und Toppings anrichten.'],
-      createdAt: now,
-      updatedAt: now
-    }
-  ];
-}
-
-function createStarterMeals(weekStart: string): WeeklyMeal[] {
-  const now = Date.now();
-
-  return [
-    {
-      id: 'starter-monday-breakfast',
-      weekStart,
-      day: 'monday',
-      slot: 'breakfast',
-      recipeId: 'starter-overnight-oats',
-      recipeTitle: 'Overnight Oats',
-      note: 'Ein einfacher Start in die Woche.',
-      createdAt: now,
-      updatedAt: now
-    },
-    {
-      id: 'starter-monday-dinner',
-      weekStart,
-      day: 'monday',
-      slot: 'dinner',
-      recipeId: 'starter-vegetable-pasta',
-      recipeTitle: 'Gemüsepasta',
-      note: 'Übrig gebliebenes Gemüse verwenden.',
-      createdAt: now,
-      updatedAt: now
-    },
-    {
-      id: 'starter-wednesday-lunch',
-      weekStart,
-      day: 'wednesday',
-      slot: 'lunch',
-      recipeId: 'starter-sheet-pan-tacos',
-      recipeTitle: 'Tacos vom Blech',
-      note: 'Ideal für ein schnelles Mittagessen.',
-      createdAt: now,
-      updatedAt: now
-    }
-  ];
-}
+const starterRecipeIds = ['starter-overnight-oats', 'starter-vegetable-pasta', 'starter-sheet-pan-tacos'];
+const starterMealIds = ['starter-monday-breakfast', 'starter-monday-dinner', 'starter-wednesday-lunch'];
 
 function createStarterShopping(): ShoppingItem[] {
   const now = Date.now();
@@ -125,12 +50,10 @@ function App() {
   const firebase = useMemo(() => getFirebaseServices(), []);
   const currentWeekStart = useMemo(() => getMondayForDate(new Date()), []);
 
-  const starterRecipes = useMemo(() => createStarterRecipes(), []);
-  const starterMeals = useMemo(() => createStarterMeals(currentWeekStart), [currentWeekStart]);
   const starterShopping = useMemo(() => createStarterShopping(), []);
 
-  const [recipes, setRecipes] = useState<Recipe[]>(persisted?.recipes ?? starterRecipes);
-  const [weeklyMeals, setWeeklyMeals] = useState<WeeklyMeal[]>(persisted?.weeklyMeals ?? starterMeals);
+  const [recipes, setRecipes] = useState<Recipe[]>(() => (persisted?.recipes ?? []).filter((recipe) => !starterRecipeIds.includes(recipe.id)));
+  const [weeklyMeals, setWeeklyMeals] = useState<WeeklyMeal[]>(() => (persisted?.weeklyMeals ?? []).filter((meal) => !starterMealIds.includes(meal.id)));
   const [shoppingItems, setShoppingItems] = useState<ShoppingItem[]>(persisted?.shoppingItems ?? starterShopping);
   const [pantryItems, setPantryItems] = useState<PantryItem[]>(persisted?.pantryItems ?? []);
   const [activeTab, setActiveTab] = useState<'recipes' | 'week' | 'shopping' | 'pantry' | null>(null);
@@ -167,7 +90,12 @@ function App() {
 
         const handleSyncError = () => setSyncStatus('Synchronisierung nicht verfügbar');
 
-        unsubscribeRecipes = subscribeToRecipes(firebase.db, setRecipes, handleSyncError);
+        await Promise.all([
+          ...starterRecipeIds.map((recipeId) => deleteRecipe(firebase.db, recipeId)),
+          ...starterMealIds.map((mealId) => deleteWeeklyMeal(firebase.db, mealId))
+        ]);
+
+        unsubscribeRecipes = subscribeToRecipes(firebase.db, (items) => setRecipes(items.filter((recipe) => !starterRecipeIds.includes(recipe.id))), handleSyncError);
         unsubscribeMeals = subscribeToWeeklyMeals(firebase.db, setWeeklyMeals, handleSyncError);
         unsubscribeShopping = subscribeToShoppingItems(firebase.db, (items) => {
           setShoppingItems(items);
@@ -176,10 +104,10 @@ function App() {
         unsubscribePantry = subscribeToPantryItems(firebase.db, setPantryItems, handleSyncError);
 
         await seedIfEmpty(firebase.db, {
-          recipes: recipes.length > 0 ? recipes : starterRecipes,
-          weeklyMeals: weeklyMeals.length > 0 ? weeklyMeals : starterMeals,
-          shoppingItems: shoppingItems.length > 0 ? shoppingItems : starterShopping
-          , pantryItems
+          recipes,
+          weeklyMeals,
+          shoppingItems: shoppingItems.length > 0 ? shoppingItems : starterShopping,
+          pantryItems
         });
       })
       .catch(() => {
