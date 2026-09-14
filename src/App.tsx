@@ -1,13 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import {
   getFirebaseServices,
   seedIfEmpty,
   subscribeToRecipes,
   subscribeToShoppingItems,
-  subscribeToWeeklyMeals
+  subscribeToWeeklyMeals,
+  upsertRecipe
 } from './lib/firebase';
 import {
+  createRecipe,
   getMondayForDate,
+  parseLines,
   loadAppState,
   saveAppState,
 } from './lib/storage';
@@ -112,8 +115,9 @@ function App() {
   const [recipes, setRecipes] = useState<Recipe[]>(persisted?.recipes ?? starterRecipes);
   const [weeklyMeals, setWeeklyMeals] = useState<WeeklyMeal[]>(persisted?.weeklyMeals ?? starterMeals);
   const [shoppingItems, setShoppingItems] = useState<ShoppingItem[]>(persisted?.shoppingItems ?? starterShopping);
-  const [activeTab, setActiveTab] = useState<'recipes' | 'week' | 'shopping'>('recipes');
+  const [activeTab, setActiveTab] = useState<'recipes' | 'week' | 'shopping' | null>(null);
   const [syncStatus, setSyncStatus] = useState(firebase ? 'Gemeinsame Synchronisierung wird verbunden ...' : 'Lokaler Modus');
+  const [recipeDraft, setRecipeDraft] = useState({ title: '', servings: '4', prepTimeMinutes: '30', ingredients: '', instructions: '' });
 
   useEffect(() => {
     saveAppState({ recipes, weeklyMeals, shoppingItems });
@@ -165,6 +169,29 @@ function App() {
   const weekMeals = useMemo(() => weeklyMeals.filter((meal) => meal.weekStart === currentWeekStart), [currentWeekStart, weeklyMeals]);
   const checkedCount = shoppingItems.filter((item) => item.checked).length;
 
+  function handleRecipeSubmit(event: FormEvent<HTMLFormElement>): void {
+    event.preventDefault();
+
+    if (!recipeDraft.title.trim()) {
+      return;
+    }
+
+    const recipe = createRecipe({
+      title: recipeDraft.title.trim(),
+      servings: Number(recipeDraft.servings) || 4,
+      prepTimeMinutes: Number(recipeDraft.prepTimeMinutes) || 30,
+      ingredients: parseLines(recipeDraft.ingredients),
+      instructions: parseLines(recipeDraft.instructions)
+    });
+
+    setRecipes((current) => [recipe, ...current]);
+    setRecipeDraft({ title: '', servings: '4', prepTimeMinutes: '30', ingredients: '', instructions: '' });
+
+    if (firebase) {
+      void upsertRecipe(firebase.db, recipe);
+    }
+  }
+
   return (
     <main className="app-shell">
       <section className="hero-card hero-card--wide">
@@ -210,6 +237,77 @@ function App() {
           Einkaufsliste
         </button>
       </nav>
+
+      {activeTab === 'recipes' ? (
+        <section className="recipe-window" aria-labelledby="recipes-title">
+          <div className="recipe-window-heading">
+            <div>
+              <p className="eyebrow recipe-window-eyebrow">Rezepte</p>
+              <h2 id="recipes-title">Alle Rezepte</h2>
+            </div>
+            <span className="recipe-count">{recipes.length} insgesamt</span>
+          </div>
+
+          <div className="recipe-window-grid">
+            <form className="composer-card recipe-form" onSubmit={handleRecipeSubmit}>
+              <div className="card-heading">
+                <h3>Neues Rezept</h3>
+                <p>Lege ein Rezept für die gemeinsame Sammlung an.</p>
+              </div>
+
+              <label>
+                Titel
+                <input value={recipeDraft.title} onChange={(event) => setRecipeDraft((current) => ({ ...current, title: event.target.value }))} placeholder="Name des Rezepts" required />
+              </label>
+
+              <div className="two-column">
+                <label>
+                  Portionen
+                  <input value={recipeDraft.servings} onChange={(event) => setRecipeDraft((current) => ({ ...current, servings: event.target.value }))} min="1" type="number" />
+                </label>
+                <label>
+                  Minuten
+                  <input value={recipeDraft.prepTimeMinutes} onChange={(event) => setRecipeDraft((current) => ({ ...current, prepTimeMinutes: event.target.value }))} min="1" type="number" />
+                </label>
+              </div>
+
+              <label>
+                Zutaten, eine pro Zeile
+                <textarea value={recipeDraft.ingredients} onChange={(event) => setRecipeDraft((current) => ({ ...current, ingredients: event.target.value }))} rows={5} />
+              </label>
+
+              <label>
+                Zubereitung, eine pro Zeile
+                <textarea value={recipeDraft.instructions} onChange={(event) => setRecipeDraft((current) => ({ ...current, instructions: event.target.value }))} rows={5} />
+              </label>
+
+              <button type="submit">Rezept anlegen</button>
+            </form>
+
+            <div className="recipe-list" aria-label="Vorhandene Rezepte">
+              {recipes.map((recipe) => (
+                <article className="recipe-summary" key={recipe.id}>
+                  <div className="recipe-summary-heading">
+                    <h3>{recipe.title}</h3>
+                    <span>{recipe.servings} Portionen</span>
+                  </div>
+                  <p>{recipe.prepTimeMinutes} Minuten Zubereitungszeit</p>
+                  <div className="recipe-summary-columns">
+                    <div>
+                      <strong>Zutaten</strong>
+                      <span>{recipe.ingredients.length} Zutaten</span>
+                    </div>
+                    <div>
+                      <strong>Zubereitung</strong>
+                      <span>{recipe.instructions.length} Schritte</span>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
 
     </main>
   );
