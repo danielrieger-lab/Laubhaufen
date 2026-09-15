@@ -72,7 +72,7 @@ button {
   position: absolute;
   inset: 0 0 auto;
   height: 16px;
-  background: var(--brown);
+  background: var(--green);
   content: '';
 }
 
