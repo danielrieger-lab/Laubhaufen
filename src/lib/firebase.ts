@@ -89,6 +89,8 @@ function normalizeRecipe(id: string, data: Record<string, unknown>): Recipe {
     id,
     title: typeof data.title === 'string' ? data.title : 'Unbenanntes Rezept',
     tags: normalizeStrings(data.tags),
+    countries: normalizeStrings(data.countries),
+    seasons: normalizeStrings(data.seasons),
     ingredients: normalizeStrings(data.ingredients),
     link: typeof data.link === 'string' ? data.link : legacyInstructions[0] ?? '',
     createdAt: typeof data.createdAt === 'number' ? data.createdAt : Date.now(),

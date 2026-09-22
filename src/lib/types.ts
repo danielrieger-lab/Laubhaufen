@@ -6,6 +6,8 @@ export interface Recipe {
   id: string;
   title: string;
   tags: string[];
+  countries: string[];
+  seasons: string[];
   ingredients: string[];
   link: string;
   updatedAt: number;

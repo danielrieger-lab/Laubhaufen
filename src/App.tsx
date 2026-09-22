@@ -48,7 +48,7 @@ function App() {
   const [pantryItems, setPantryItems] = useState<PantryItem[]>(persisted?.pantryItems ?? []);
   const [activeTab, setActiveTab] = useState<'recipes' | 'week' | 'shopping' | 'pantry' | null>(null);
   const [syncStatus, setSyncStatus] = useState(firebase ? 'Gemeinsame Synchronisierung wird verbunden ...' : 'Lokaler Modus');
-  const [recipeDraft, setRecipeDraft] = useState({ title: '', tags: '', ingredients: '', link: '' });
+  const [recipeDraft, setRecipeDraft] = useState({ title: '', tags: '', countries: '', seasons: '', ingredients: '', link: '' });
   const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
   const [editingPantryId, setEditingPantryId] = useState<string | null>(null);
@@ -119,6 +119,8 @@ function App() {
   const weekMeals = useMemo(() => weeklyMeals.filter((meal) => meal.weekStart === currentWeekStart), [currentWeekStart, weeklyMeals]);
   const checkedCount = shoppingItems.filter((item) => item.checked).length;
   const availableTags = useMemo(() => Array.from(new Set(recipes.flatMap((recipe) => recipe.tags ?? []))).sort((a, b) => a.localeCompare(b, 'de-DE')), [recipes]);
+  const availableCountries = useMemo(() => Array.from(new Set(recipes.flatMap((recipe) => recipe.countries ?? []))).sort((a, b) => a.localeCompare(b, 'de-DE')), [recipes]);
+  const availableSeasons = useMemo(() => Array.from(new Set(recipes.flatMap((recipe) => recipe.seasons ?? []))).sort((a, b) => a.localeCompare(b, 'de-DE')), [recipes]);
 
   function recipeAvailability(recipe: Recipe | undefined): 'complete' | 'partial' | 'missing' {
     if (!recipe || recipe.ingredients.length === 0) {
@@ -142,12 +144,14 @@ function App() {
     const recipe = createRecipe({
       title: recipeDraft.title.trim(),
       tags: parseTags(recipeDraft.tags),
+      countries: parseTags(recipeDraft.countries),
+      seasons: parseTags(recipeDraft.seasons),
       ingredients: parseLines(recipeDraft.ingredients),
       link: recipeDraft.link.trim()
     });
 
     setRecipes((current) => [recipe, ...current]);
-    setRecipeDraft({ title: '', tags: '', ingredients: '', link: '' });
+    setRecipeDraft({ title: '', tags: '', countries: '', seasons: '', ingredients: '', link: '' });
 
     if (firebase) {
       void upsertRecipe(firebase.db, recipe).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
@@ -156,7 +160,7 @@ function App() {
 
   function startEditingRecipe(recipe: Recipe): void {
     setEditingRecipeId(recipe.id);
-    setEditingRecipe({ ...recipe, tags: recipe.tags ?? [], link: recipe.link ?? '' });
+    setEditingRecipe({ ...recipe, tags: recipe.tags ?? [], countries: recipe.countries ?? [], seasons: recipe.seasons ?? [], link: recipe.link ?? '' });
   }
 
   function cancelEditingRecipe(): void {
@@ -452,6 +456,16 @@ function App() {
               </label>
 
               <label>
+                Land
+                <input list="recipe-countries" value={recipeDraft.countries} onChange={(event) => setRecipeDraft((current) => ({ ...current, countries: event.target.value }))} placeholder="z. B. Italien, Japan" />
+              </label>
+
+              <label>
+                Season
+                <input list="recipe-seasons" value={recipeDraft.seasons} onChange={(event) => setRecipeDraft((current) => ({ ...current, seasons: event.target.value }))} placeholder="z. B. Frühling, Winter" />
+              </label>
+
+              <label>
                 Zutaten, eine pro Zeile
                 <textarea value={recipeDraft.ingredients} onChange={(event) => setRecipeDraft((current) => ({ ...current, ingredients: event.target.value }))} rows={5} />
               </label>
@@ -479,6 +493,14 @@ function App() {
                         <input list="recipe-tags" value={(editingRecipe.tags ?? []).join(', ')} onChange={(event) => setEditingRecipe((current) => current ? { ...current, tags: parseTags(event.target.value) } : current)} placeholder="z. B. schnell, vegetarisch" />
                       </label>
                       <label>
+                        Land
+                        <input list="recipe-countries" value={(editingRecipe.countries ?? []).join(', ')} onChange={(event) => setEditingRecipe((current) => current ? { ...current, countries: parseTags(event.target.value) } : current)} placeholder="z. B. Italien, Japan" />
+                      </label>
+                      <label>
+                        Season
+                        <input list="recipe-seasons" value={(editingRecipe.seasons ?? []).join(', ')} onChange={(event) => setEditingRecipe((current) => current ? { ...current, seasons: parseTags(event.target.value) } : current)} placeholder="z. B. Frühling, Winter" />
+                      </label>
+                      <label>
                         Zutaten, eine pro Zeile
                         <textarea rows={4} value={editingRecipe.ingredients.join('\n')} onChange={(event) => setEditingRecipe((current) => current ? { ...current, ingredients: parseLines(event.target.value) } : current)} />
                       </label>
@@ -498,6 +520,8 @@ function App() {
                         <span>{(recipe.tags ?? []).length} Tags</span>
                       </div>
                       {(recipe.tags ?? []).length > 0 ? <div className="recipe-tags">{recipe.tags.map((tag) => <span key={tag}>{tag}</span>)}</div> : null}
+                      {(recipe.countries ?? []).length > 0 ? <div className="recipe-tags"><strong>Land</strong>{recipe.countries.map((country) => <span key={country}>{country}</span>)}</div> : null}
+                      {(recipe.seasons ?? []).length > 0 ? <div className="recipe-tags"><strong>Season</strong>{recipe.seasons.map((season) => <span key={season}>{season}</span>)}</div> : null}
                       <div className="recipe-summary-columns">
                         <div>
                           <strong>Zutaten</strong>
@@ -518,6 +542,8 @@ function App() {
               ))}
             </div>
             <datalist id="recipe-tags">{availableTags.map((tag) => <option key={tag} value={tag} />)}</datalist>
+            <datalist id="recipe-countries">{availableCountries.map((country) => <option key={country} value={country} />)}</datalist>
+            <datalist id="recipe-seasons">{availableSeasons.map((season) => <option key={season} value={season} />)}</datalist>
           </div>
         </section>
       ) : null}
