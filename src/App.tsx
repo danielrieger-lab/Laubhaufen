@@ -381,37 +381,39 @@ function App() {
 
   return (
     <main className="app-shell">
-      <section className="hero-card hero-card--wide">
-        <div className="hero-copy">
-          <p className="eyebrow">Laubhaufen</p>
+      {activeTab === null ? (
+        <section className="hero-card hero-card--wide">
+          <div className="hero-copy">
+            <p className="eyebrow">Laubhaufen</p>
 
-          <div className="hero-meta">
-            <span>{syncStatus}</span>
-            <span>{recipes.length} Rezepte</span>
-            <span>{weekMeals.length} geplante Mahlzeiten</span>
-            <span>{shoppingItems.length} Einkaufsartikel</span>
+            <div className="hero-meta">
+              <span>{syncStatus}</span>
+              <span>{recipes.length} Rezepte</span>
+              <span>{weekMeals.length} geplante Mahlzeiten</span>
+              <span>{shoppingItems.length} Einkaufsartikel</span>
+            </div>
           </div>
-        </div>
 
-        <div className="stats-grid stats-grid--wide">
-          <article>
-            <strong>{recipes.length}</strong>
-            <span>Rezepte</span>
-          </article>
-          <article>
-            <strong>{weekMeals.length}</strong>
-            <span>Mahlzeiten diese Woche</span>
-          </article>
-          <article>
-            <strong>{shoppingItems.length}</strong>
-            <span>Einkaufsartikel</span>
-          </article>
-          <article>
-            <strong>{checkedCount}</strong>
-            <span>Erledigt</span>
-          </article>
-        </div>
-      </section>
+          <div className="stats-grid stats-grid--wide">
+            <article>
+              <strong>{recipes.length}</strong>
+              <span>Rezepte</span>
+            </article>
+            <article>
+              <strong>{weekMeals.length}</strong>
+              <span>Mahlzeiten diese Woche</span>
+            </article>
+            <article>
+              <strong>{shoppingItems.length}</strong>
+              <span>Einkaufsartikel</span>
+            </article>
+            <article>
+              <strong>{checkedCount}</strong>
+              <span>Erledigt</span>
+            </article>
+          </div>
+        </section>
+      ) : null}
 
       {activeTab === 'recipes' ? (
         <section className="recipe-window" aria-labelledby="recipes-title">
