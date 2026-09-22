@@ -103,6 +103,8 @@ function App() {
   const [pantryItems, setPantryItems] = useState<PantryItem[]>(persisted?.pantryItems ?? []);
   const [activeTab, setActiveTab] = useState<'recipes' | 'week' | 'shopping' | 'pantry' | null>(null);
   const [selectedRecipeTag, setSelectedRecipeTag] = useState('');
+  const [selectedRecipeCountry, setSelectedRecipeCountry] = useState('');
+  const [selectedRecipeSeason, setSelectedRecipeSeason] = useState('');
   const [viewingRecipe, setViewingRecipe] = useState<Recipe | null>(null);
   const [syncStatus, setSyncStatus] = useState(firebase ? 'Gemeinsame Synchronisierung wird verbunden ...' : 'Lokaler Modus');
   const [recipeDraft, setRecipeDraft] = useState({ title: '', tags: [] as string[], countries: [] as string[], seasons: [] as string[], ingredients: [] as string[], instructions: [] as string[], link: '' });
@@ -179,12 +181,17 @@ function App() {
   const availableCountries = useMemo(() => Array.from(new Set(recipes.flatMap((recipe) => recipe.countries ?? []))).sort((a, b) => a.localeCompare(b, 'de-DE')), [recipes]);
   const availableSeasons = useMemo(() => Array.from(new Set(recipes.flatMap((recipe) => recipe.seasons ?? []))).sort((a, b) => a.localeCompare(b, 'de-DE')), [recipes]);
   const filteredRecipes = useMemo(() => {
-    if (!selectedRecipeTag) {
+    if (!selectedRecipeTag && !selectedRecipeCountry && !selectedRecipeSeason) {
       return recipes;
     }
 
-    return recipes.filter((recipe) => recipe.tags.some((tag) => tag.toLocaleLowerCase('de-DE') === selectedRecipeTag.toLocaleLowerCase('de-DE')));
-  }, [recipes, selectedRecipeTag]);
+    return recipes.filter((recipe) => {
+      const matchesTag = !selectedRecipeTag || recipe.tags.some((tag) => tag.toLocaleLowerCase('de-DE') === selectedRecipeTag.toLocaleLowerCase('de-DE'));
+      const matchesCountry = !selectedRecipeCountry || recipe.countries.some((country) => country.toLocaleLowerCase('de-DE') === selectedRecipeCountry.toLocaleLowerCase('de-DE'));
+      const matchesSeason = !selectedRecipeSeason || recipe.seasons.some((season) => season.toLocaleLowerCase('de-DE') === selectedRecipeSeason.toLocaleLowerCase('de-DE'));
+      return matchesTag && matchesCountry && matchesSeason;
+    });
+  }, [recipes, selectedRecipeCountry, selectedRecipeSeason, selectedRecipeTag]);
 
   function recipeAvailability(recipe: Recipe | undefined): 'complete' | 'partial' | 'missing' {
     if (!recipe || recipe.ingredients.length === 0) {
@@ -493,6 +500,20 @@ function App() {
                 <select value={selectedRecipeTag} onChange={(event) => setSelectedRecipeTag(event.target.value)}>
                   <option value="">Alle Tags</option>
                   {availableTags.map((tag) => <option key={tag} value={tag}>{tag}</option>)}
+                </select>
+              </label>
+              <label>
+                Land filtern
+                <select value={selectedRecipeCountry} onChange={(event) => setSelectedRecipeCountry(event.target.value)}>
+                  <option value="">Alle Länder</option>
+                  {availableCountries.map((country) => <option key={country} value={country}>{country}</option>)}
+                </select>
+              </label>
+              <label>
+                Season filtern
+                <select value={selectedRecipeSeason} onChange={(event) => setSelectedRecipeSeason(event.target.value)}>
+                  <option value="">Alle Seasons</option>
+                  {availableSeasons.map((season) => <option key={season} value={season}>{season}</option>)}
                 </select>
               </label>
               <span className="recipe-count">{filteredRecipes.length} von {recipes.length}</span>
