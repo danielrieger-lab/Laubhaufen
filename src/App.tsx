@@ -102,6 +102,8 @@ function App() {
   const [shoppingItems, setShoppingItems] = useState<ShoppingItem[]>(() => (persisted?.shoppingItems ?? []).filter((item) => !starterShoppingIds.includes(item.id)));
   const [pantryItems, setPantryItems] = useState<PantryItem[]>(persisted?.pantryItems ?? []);
   const [activeTab, setActiveTab] = useState<'recipes' | 'week' | 'shopping' | 'pantry' | null>(null);
+  const [selectedRecipeTag, setSelectedRecipeTag] = useState('');
+  const [viewingRecipe, setViewingRecipe] = useState<Recipe | null>(null);
   const [syncStatus, setSyncStatus] = useState(firebase ? 'Gemeinsame Synchronisierung wird verbunden ...' : 'Lokaler Modus');
   const [recipeDraft, setRecipeDraft] = useState({ title: '', tags: [] as string[], countries: [] as string[], seasons: [] as string[], ingredients: [] as string[], instructions: [] as string[], link: '' });
   const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
@@ -176,6 +178,13 @@ function App() {
   const availableTags = useMemo(() => Array.from(new Set(recipes.flatMap((recipe) => recipe.tags ?? []))).sort((a, b) => a.localeCompare(b, 'de-DE')), [recipes]);
   const availableCountries = useMemo(() => Array.from(new Set(recipes.flatMap((recipe) => recipe.countries ?? []))).sort((a, b) => a.localeCompare(b, 'de-DE')), [recipes]);
   const availableSeasons = useMemo(() => Array.from(new Set(recipes.flatMap((recipe) => recipe.seasons ?? []))).sort((a, b) => a.localeCompare(b, 'de-DE')), [recipes]);
+  const filteredRecipes = useMemo(() => {
+    if (!selectedRecipeTag) {
+      return recipes;
+    }
+
+    return recipes.filter((recipe) => recipe.tags.some((tag) => tag.toLocaleLowerCase('de-DE') === selectedRecipeTag.toLocaleLowerCase('de-DE')));
+  }, [recipes, selectedRecipeTag]);
 
   function recipeAvailability(recipe: Recipe | undefined): 'complete' | 'partial' | 'missing' {
     if (!recipe || recipe.ingredients.length === 0) {
@@ -478,7 +487,16 @@ function App() {
               <p className="eyebrow recipe-window-eyebrow">Rezepte</p>
               <h2 id="recipes-title">Alle Rezepte</h2>
             </div>
-            <span className="recipe-count">{recipes.length} insgesamt</span>
+            <div className="recipe-window-controls">
+              <label>
+                Tag filtern
+                <select value={selectedRecipeTag} onChange={(event) => setSelectedRecipeTag(event.target.value)}>
+                  <option value="">Alle Tags</option>
+                  {availableTags.map((tag) => <option key={tag} value={tag}>{tag}</option>)}
+                </select>
+              </label>
+              <span className="recipe-count">{filteredRecipes.length} von {recipes.length}</span>
+            </div>
           </div>
 
           <div className="recipe-window-grid">
@@ -507,8 +525,34 @@ function App() {
               <button type="submit">Rezept anlegen</button>
             </form>
 
+            {viewingRecipe ? (
+              <section className="recipe-view-panel" aria-labelledby="recipe-view-title">
+                <div className="recipe-view-heading">
+                  <div>
+                    <p className="eyebrow recipe-window-eyebrow">Rezept ansehen</p>
+                    <h3 id="recipe-view-title">{viewingRecipe.title}</h3>
+                  </div>
+                  <button type="button" className="button-secondary" onClick={() => setViewingRecipe(null)}>Schließen</button>
+                </div>
+                {(viewingRecipe.tags ?? []).length > 0 ? <div className="recipe-tags">{viewingRecipe.tags.map((tag) => <span key={tag}>{tag}</span>)}</div> : null}
+                {(viewingRecipe.countries ?? []).length > 0 ? <div className="recipe-tags"><strong>Land</strong>{viewingRecipe.countries.map((country) => <span key={country}>{country}</span>)}</div> : null}
+                {(viewingRecipe.seasons ?? []).length > 0 ? <div className="recipe-tags"><strong>Season</strong>{viewingRecipe.seasons.map((season) => <span key={season}>{season}</span>)}</div> : null}
+                <div className="recipe-view-columns">
+                  <div>
+                    <h4>Zutaten</h4>
+                    <ul>{viewingRecipe.ingredients.map((ingredient) => <li key={ingredient}>{ingredient}</li>)}</ul>
+                  </div>
+                  <div>
+                    <h4>Zubereitung</h4>
+                    <ol>{(viewingRecipe.instructions ?? []).map((instruction) => <li key={instruction}>{instruction}</li>)}</ol>
+                  </div>
+                </div>
+                {viewingRecipe.link ? <a className="recipe-view-link" href={viewingRecipe.link} target="_blank" rel="noreferrer">Link öffnen</a> : null}
+              </section>
+            ) : null}
+
             <div className="recipe-list" aria-label="Vorhandene Rezepte">
-              {recipes.map((recipe) => (
+              {filteredRecipes.map((recipe) => (
                 <article className="recipe-summary" key={recipe.id}>
                   {editingRecipeId === recipe.id && editingRecipe ? (
                     <form className="recipe-edit-form" onSubmit={saveEditedRecipe}>
@@ -555,6 +599,7 @@ function App() {
                         </div>
                       </div>
                       <div className="recipe-actions">
+                        <button type="button" onClick={() => setViewingRecipe(recipe)}>Ansehen</button>
                         <button type="button" onClick={() => startEditingRecipe(recipe)}>Bearbeiten</button>
                         <button type="button" className="button-danger" onClick={() => removeRecipe(recipe)}>Löschen</button>
                       </div>
@@ -562,6 +607,7 @@ function App() {
                   )}
                 </article>
               ))}
+              {filteredRecipes.length === 0 ? <p className="recipe-empty">Keine Rezepte mit diesem Tag.</p> : null}
             </div>
           </div>
         </section>
