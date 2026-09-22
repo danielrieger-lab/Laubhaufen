@@ -5,10 +5,9 @@ export type MealSlot = 'breakfast' | 'lunch' | 'dinner';
 export interface Recipe {
   id: string;
   title: string;
-  servings: number;
-  prepTimeMinutes: number;
+  tags: string[];
   ingredients: string[];
-  instructions: string[];
+  link: string;
   updatedAt: number;
   createdAt: number;
 }

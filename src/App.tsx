@@ -23,6 +23,7 @@ import {
   dayLabel,
   getMondayForDate,
   parseLines,
+  parseTags,
   loadAppState,
   nextCheckState,
   saveAppState,
@@ -47,7 +48,7 @@ function App() {
   const [pantryItems, setPantryItems] = useState<PantryItem[]>(persisted?.pantryItems ?? []);
   const [activeTab, setActiveTab] = useState<'recipes' | 'week' | 'shopping' | 'pantry' | null>(null);
   const [syncStatus, setSyncStatus] = useState(firebase ? 'Gemeinsame Synchronisierung wird verbunden ...' : 'Lokaler Modus');
-  const [recipeDraft, setRecipeDraft] = useState({ title: '', servings: '4', prepTimeMinutes: '30', ingredients: '', instructions: '' });
+  const [recipeDraft, setRecipeDraft] = useState({ title: '', tags: '', ingredients: '', link: '' });
   const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
   const [editingPantryId, setEditingPantryId] = useState<string | null>(null);
@@ -117,6 +118,7 @@ function App() {
 
   const weekMeals = useMemo(() => weeklyMeals.filter((meal) => meal.weekStart === currentWeekStart), [currentWeekStart, weeklyMeals]);
   const checkedCount = shoppingItems.filter((item) => item.checked).length;
+  const availableTags = useMemo(() => Array.from(new Set(recipes.flatMap((recipe) => recipe.tags ?? []))).sort((a, b) => a.localeCompare(b, 'de-DE')), [recipes]);
 
   function recipeAvailability(recipe: Recipe | undefined): 'complete' | 'partial' | 'missing' {
     if (!recipe || recipe.ingredients.length === 0) {
@@ -139,14 +141,13 @@ function App() {
 
     const recipe = createRecipe({
       title: recipeDraft.title.trim(),
-      servings: Number(recipeDraft.servings) || 4,
-      prepTimeMinutes: Number(recipeDraft.prepTimeMinutes) || 30,
+      tags: parseTags(recipeDraft.tags),
       ingredients: parseLines(recipeDraft.ingredients),
-      instructions: parseLines(recipeDraft.instructions)
+      link: recipeDraft.link.trim()
     });
 
     setRecipes((current) => [recipe, ...current]);
-    setRecipeDraft({ title: '', servings: '4', prepTimeMinutes: '30', ingredients: '', instructions: '' });
+    setRecipeDraft({ title: '', tags: '', ingredients: '', link: '' });
 
     if (firebase) {
       void upsertRecipe(firebase.db, recipe).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
@@ -155,7 +156,7 @@ function App() {
 
   function startEditingRecipe(recipe: Recipe): void {
     setEditingRecipeId(recipe.id);
-    setEditingRecipe({ ...recipe });
+    setEditingRecipe({ ...recipe, tags: recipe.tags ?? [], link: recipe.link ?? '' });
   }
 
   function cancelEditingRecipe(): void {
@@ -445,16 +446,10 @@ function App() {
                 <input value={recipeDraft.title} onChange={(event) => setRecipeDraft((current) => ({ ...current, title: event.target.value }))} placeholder="Name des Rezepts" required />
               </label>
 
-              <div className="two-column">
-                <label>
-                  Portionen
-                  <input value={recipeDraft.servings} onChange={(event) => setRecipeDraft((current) => ({ ...current, servings: event.target.value }))} min="1" type="number" />
-                </label>
-                <label>
-                  Minuten
-                  <input value={recipeDraft.prepTimeMinutes} onChange={(event) => setRecipeDraft((current) => ({ ...current, prepTimeMinutes: event.target.value }))} min="1" type="number" />
-                </label>
-              </div>
+              <label>
+                Tags
+                <input list="recipe-tags" value={recipeDraft.tags} onChange={(event) => setRecipeDraft((current) => ({ ...current, tags: event.target.value }))} placeholder="z. B. schnell, vegetarisch" />
+              </label>
 
               <label>
                 Zutaten, eine pro Zeile
@@ -462,8 +457,8 @@ function App() {
               </label>
 
               <label>
-                Zubereitung, eine pro Zeile
-                <textarea value={recipeDraft.instructions} onChange={(event) => setRecipeDraft((current) => ({ ...current, instructions: event.target.value }))} rows={5} />
+                Link
+                <input value={recipeDraft.link} onChange={(event) => setRecipeDraft((current) => ({ ...current, link: event.target.value }))} placeholder="https://..." type="url" />
               </label>
 
               <button type="submit">Rezept anlegen</button>
@@ -479,23 +474,17 @@ function App() {
                         Titel
                         <input value={editingRecipe.title} onChange={(event) => setEditingRecipe((current) => current ? { ...current, title: event.target.value } : current)} required />
                       </label>
-                      <div className="two-column">
-                        <label>
-                          Portionen
-                          <input type="number" min="1" value={editingRecipe.servings} onChange={(event) => setEditingRecipe((current) => current ? { ...current, servings: Number(event.target.value) } : current)} />
-                        </label>
-                        <label>
-                          Minuten
-                          <input type="number" min="1" value={editingRecipe.prepTimeMinutes} onChange={(event) => setEditingRecipe((current) => current ? { ...current, prepTimeMinutes: Number(event.target.value) } : current)} />
-                        </label>
-                      </div>
+                      <label>
+                        Tags
+                        <input list="recipe-tags" value={(editingRecipe.tags ?? []).join(', ')} onChange={(event) => setEditingRecipe((current) => current ? { ...current, tags: parseTags(event.target.value) } : current)} placeholder="z. B. schnell, vegetarisch" />
+                      </label>
                       <label>
                         Zutaten, eine pro Zeile
                         <textarea rows={4} value={editingRecipe.ingredients.join('\n')} onChange={(event) => setEditingRecipe((current) => current ? { ...current, ingredients: parseLines(event.target.value) } : current)} />
                       </label>
                       <label>
-                        Zubereitung, eine pro Zeile
-                        <textarea rows={4} value={editingRecipe.instructions.join('\n')} onChange={(event) => setEditingRecipe((current) => current ? { ...current, instructions: parseLines(event.target.value) } : current)} />
+                        Link
+                        <input type="url" value={editingRecipe.link ?? ''} onChange={(event) => setEditingRecipe((current) => current ? { ...current, link: event.target.value } : current)} placeholder="https://..." />
                       </label>
                       <div className="recipe-actions">
                         <button type="submit">Änderungen speichern</button>
@@ -506,17 +495,17 @@ function App() {
                     <>
                       <div className="recipe-summary-heading">
                         <h3>{recipe.title}</h3>
-                        <span>{recipe.servings} Portionen</span>
+                        <span>{(recipe.tags ?? []).length} Tags</span>
                       </div>
-                      <p>{recipe.prepTimeMinutes} Minuten Zubereitungszeit</p>
+                      {(recipe.tags ?? []).length > 0 ? <div className="recipe-tags">{recipe.tags.map((tag) => <span key={tag}>{tag}</span>)}</div> : null}
                       <div className="recipe-summary-columns">
                         <div>
                           <strong>Zutaten</strong>
                           <span>{recipe.ingredients.length} Zutaten</span>
                         </div>
                         <div>
-                          <strong>Zubereitung</strong>
-                          <span>{recipe.instructions.length} Schritte</span>
+                          <strong>Link</strong>
+                          {recipe.link ? <a href={recipe.link} target="_blank" rel="noreferrer">Öffnen</a> : <span>Kein Link</span>}
                         </div>
                       </div>
                       <div className="recipe-actions">
@@ -528,6 +517,7 @@ function App() {
                 </article>
               ))}
             </div>
+            <datalist id="recipe-tags">{availableTags.map((tag) => <option key={tag} value={tag} />)}</datalist>
           </div>
         </section>
       ) : null}

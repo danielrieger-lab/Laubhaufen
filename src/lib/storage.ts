@@ -50,6 +50,22 @@ export function parseLines(value: string): string[] {
     .filter(Boolean);
 }
 
+export function parseTags(value: string): string[] {
+  const seen = new Set<string>();
+
+  return value
+    .split(',')
+    .map((tag) => tag.trim())
+    .filter((tag) => {
+      const key = tag.toLocaleLowerCase('de-DE');
+      if (!tag || seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
+}
+
 export function joinLines(value: string[] | undefined): string {
   return (value ?? []).join('\n');
 }
@@ -111,7 +127,18 @@ export function loadAppState(): AppState | null {
     }
 
     return {
-      recipes: parsed.recipes as Recipe[],
+      recipes: parsed.recipes.map((recipe) => {
+        const legacyRecipe = recipe as Recipe & { instructions?: unknown[]; servings?: number; prepTimeMinutes?: number };
+        return {
+          ...legacyRecipe,
+          tags: Array.isArray(legacyRecipe.tags) ? legacyRecipe.tags.filter((tag): tag is string => typeof tag === 'string') : [],
+          link: typeof legacyRecipe.link === 'string'
+            ? legacyRecipe.link
+            : Array.isArray(legacyRecipe.instructions) && typeof legacyRecipe.instructions[0] === 'string'
+              ? legacyRecipe.instructions[0]
+              : ''
+        };
+      }) as Recipe[],
       weeklyMeals: parsed.weeklyMeals as WeeklyMeal[],
       shoppingItems: parsed.shoppingItems as ShoppingItem[],
       pantryItems: Array.isArray(parsed.pantryItems) ? parsed.pantryItems as PantryItem[] : []

@@ -83,13 +83,14 @@ function normalizeStrings(values: unknown): string[] {
 }
 
 function normalizeRecipe(id: string, data: Record<string, unknown>): Recipe {
+  const legacyInstructions = normalizeStrings(data.instructions);
+
   return {
     id,
     title: typeof data.title === 'string' ? data.title : 'Unbenanntes Rezept',
-    servings: typeof data.servings === 'number' ? data.servings : 4,
-    prepTimeMinutes: typeof data.prepTimeMinutes === 'number' ? data.prepTimeMinutes : 30,
+    tags: normalizeStrings(data.tags),
     ingredients: normalizeStrings(data.ingredients),
-    instructions: normalizeStrings(data.instructions),
+    link: typeof data.link === 'string' ? data.link : legacyInstructions[0] ?? '',
     createdAt: typeof data.createdAt === 'number' ? data.createdAt : Date.now(),
     updatedAt: typeof data.updatedAt === 'number' ? data.updatedAt : Date.now()
   };
