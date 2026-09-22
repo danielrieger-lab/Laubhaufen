@@ -103,7 +103,7 @@ function App() {
   const [pantryItems, setPantryItems] = useState<PantryItem[]>(persisted?.pantryItems ?? []);
   const [activeTab, setActiveTab] = useState<'recipes' | 'week' | 'shopping' | 'pantry' | null>(null);
   const [syncStatus, setSyncStatus] = useState(firebase ? 'Gemeinsame Synchronisierung wird verbunden ...' : 'Lokaler Modus');
-  const [recipeDraft, setRecipeDraft] = useState({ title: '', tags: [] as string[], countries: [] as string[], seasons: [] as string[], ingredients: [] as string[], link: '' });
+  const [recipeDraft, setRecipeDraft] = useState({ title: '', tags: [] as string[], countries: [] as string[], seasons: [] as string[], ingredients: [] as string[], instructions: [] as string[], link: '' });
   const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
   const [editingPantryId, setEditingPantryId] = useState<string | null>(null);
@@ -202,11 +202,12 @@ function App() {
       countries: recipeDraft.countries,
       seasons: recipeDraft.seasons,
       ingredients: recipeDraft.ingredients,
+      instructions: recipeDraft.instructions,
       link: recipeDraft.link.trim()
     });
 
     setRecipes((current) => [recipe, ...current]);
-    setRecipeDraft({ title: '', tags: [], countries: [], seasons: [], ingredients: [], link: '' });
+    setRecipeDraft({ title: '', tags: [], countries: [], seasons: [], ingredients: [], instructions: [], link: '' });
 
     if (firebase) {
       void upsertRecipe(firebase.db, recipe).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
@@ -215,7 +216,7 @@ function App() {
 
   function startEditingRecipe(recipe: Recipe): void {
     setEditingRecipeId(recipe.id);
-    setEditingRecipe({ ...recipe, tags: recipe.tags ?? [], countries: recipe.countries ?? [], seasons: recipe.seasons ?? [], link: recipe.link ?? '' });
+    setEditingRecipe({ ...recipe, tags: recipe.tags ?? [], countries: recipe.countries ?? [], seasons: recipe.seasons ?? [], ingredients: recipe.ingredients ?? [], instructions: recipe.instructions ?? [], link: recipe.link ?? '' });
   }
 
   function cancelEditingRecipe(): void {
@@ -496,6 +497,7 @@ function App() {
               <MultiValueField label="Land" values={recipeDraft.countries} suggestions={availableCountries} listId="recipe-countries" placeholder="z. B. Italien, Japan" onChange={(countries) => setRecipeDraft((current) => ({ ...current, countries }))} />
               <MultiValueField label="Season" values={recipeDraft.seasons} suggestions={availableSeasons} listId="recipe-seasons" placeholder="z. B. Frühling, Winter" onChange={(seasons) => setRecipeDraft((current) => ({ ...current, seasons }))} />
               <MultiValueField label="Zutaten" values={recipeDraft.ingredients} placeholder="Zutat hinzufügen" onChange={(ingredients) => setRecipeDraft((current) => ({ ...current, ingredients }))} />
+              <MultiValueField label="Zubereitung" values={recipeDraft.instructions} placeholder="Schritt hinzufügen" onChange={(instructions) => setRecipeDraft((current) => ({ ...current, instructions }))} />
 
               <label>
                 Link
@@ -519,6 +521,7 @@ function App() {
                       <MultiValueField label="Land" values={editingRecipe.countries ?? []} suggestions={availableCountries} listId={`recipe-countries-edit-${editingRecipe.id}`} placeholder="z. B. Italien, Japan" onChange={(countries) => setEditingRecipe((current) => current ? { ...current, countries } : current)} />
                       <MultiValueField label="Season" values={editingRecipe.seasons ?? []} suggestions={availableSeasons} listId={`recipe-seasons-edit-${editingRecipe.id}`} placeholder="z. B. Frühling, Winter" onChange={(seasons) => setEditingRecipe((current) => current ? { ...current, seasons } : current)} />
                       <MultiValueField label="Zutaten" values={editingRecipe.ingredients} placeholder="Zutat hinzufügen" onChange={(ingredients) => setEditingRecipe((current) => current ? { ...current, ingredients } : current)} />
+                      <MultiValueField label="Zubereitung" values={editingRecipe.instructions ?? []} placeholder="Schritt hinzufügen" onChange={(instructions) => setEditingRecipe((current) => current ? { ...current, instructions } : current)} />
                       <label>
                         Link
                         <input type="url" value={editingRecipe.link ?? ''} onChange={(event) => setEditingRecipe((current) => current ? { ...current, link: event.target.value } : current)} placeholder="https://..." />
@@ -541,6 +544,10 @@ function App() {
                         <div>
                           <strong>Zutaten</strong>
                           <span>{recipe.ingredients.length} Zutaten</span>
+                        </div>
+                        <div>
+                          <strong>Zubereitung</strong>
+                          <span>{(recipe.instructions ?? []).length} Schritte</span>
                         </div>
                         <div>
                           <strong>Link</strong>

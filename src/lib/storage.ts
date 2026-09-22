@@ -134,6 +134,7 @@ export function loadAppState(): AppState | null {
           tags: Array.isArray(legacyRecipe.tags) ? legacyRecipe.tags.filter((tag): tag is string => typeof tag === 'string') : [],
           countries: Array.isArray(legacyRecipe.countries) ? legacyRecipe.countries.filter((country): country is string => typeof country === 'string') : [],
           seasons: Array.isArray(legacyRecipe.seasons) ? legacyRecipe.seasons.filter((season): season is string => typeof season === 'string') : [],
+          instructions: Array.isArray(legacyRecipe.instructions) ? legacyRecipe.instructions.filter((instruction): instruction is string => typeof instruction === 'string') : [],
           link: typeof legacyRecipe.link === 'string'
             ? legacyRecipe.link
             : Array.isArray(legacyRecipe.instructions) && typeof legacyRecipe.instructions[0] === 'string'

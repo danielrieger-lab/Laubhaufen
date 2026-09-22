@@ -9,6 +9,7 @@ export interface Recipe {
   countries: string[];
   seasons: string[];
   ingredients: string[];
+  instructions: string[];
   link: string;
   updatedAt: number;
   createdAt: number;

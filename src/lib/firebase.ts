@@ -92,6 +92,7 @@ function normalizeRecipe(id: string, data: Record<string, unknown>): Recipe {
     countries: normalizeStrings(data.countries),
     seasons: normalizeStrings(data.seasons),
     ingredients: normalizeStrings(data.ingredients),
+    instructions: legacyInstructions,
     link: typeof data.link === 'string' ? data.link : legacyInstructions[0] ?? '',
     createdAt: typeof data.createdAt === 'number' ? data.createdAt : Date.now(),
     updatedAt: typeof data.updatedAt === 'number' ? data.updatedAt : Date.now()
