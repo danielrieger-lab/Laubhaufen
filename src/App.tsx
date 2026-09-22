@@ -674,17 +674,17 @@ function App() {
       ) : null}
 
       <nav className="feature-nav" aria-label="Bereiche">
-        <button className={activeTab === 'recipes' ? 'feature-button active' : 'feature-button'} onClick={() => setActiveTab('recipes')} type="button">
-          Rezepte
+        <button className={activeTab === 'recipes' ? 'feature-button active' : 'feature-button'} onClick={() => setActiveTab('recipes')} type="button" aria-label="Rezepte" title="Rezepte">
+          <span aria-hidden="true">🍽️</span>
         </button>
-        <button className={activeTab === 'week' ? 'feature-button active' : 'feature-button'} onClick={() => setActiveTab('week')} type="button">
-          Speiseplan
+        <button className={activeTab === 'week' ? 'feature-button active' : 'feature-button'} onClick={() => setActiveTab('week')} type="button" aria-label="Speiseplan" title="Speiseplan">
+          <span aria-hidden="true">📅</span>
         </button>
-        <button className={activeTab === 'shopping' ? 'feature-button active' : 'feature-button'} onClick={() => setActiveTab('shopping')} type="button">
-          Einkaufsliste
+        <button className={activeTab === 'shopping' ? 'feature-button active' : 'feature-button'} onClick={() => setActiveTab('shopping')} type="button" aria-label="Einkaufsliste" title="Einkaufsliste">
+          <span aria-hidden="true">🛒</span>
         </button>
-        <button className={activeTab === 'pantry' ? 'feature-button active' : 'feature-button'} onClick={() => setActiveTab('pantry')} type="button">
-          Vorratskammer
+        <button className={activeTab === 'pantry' ? 'feature-button active' : 'feature-button'} onClick={() => setActiveTab('pantry')} type="button" aria-label="Vorratskammer" title="Vorratskammer">
+          <span aria-hidden="true">🧺</span>
         </button>
       </nav>
 

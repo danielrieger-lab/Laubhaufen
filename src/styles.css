@@ -52,7 +52,7 @@ button {
 .feature-nav {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: 8px;
   position: fixed;
   right: 16px;
   bottom: 16px;
@@ -68,11 +68,14 @@ button {
 }
 
 .feature-button {
-  min-height: 52px;
+  min-height: 48px;
+  min-width: 0;
   border: 1px solid rgba(var(--green-rgb), 0.2);
   border-radius: 14px;
   background: transparent;
   color: var(--brown);
+  font-size: 1.35rem;
+  line-height: 1;
 }
 
 .feature-button.active,
@@ -828,7 +831,6 @@ button.danger {
   }
 
   .feature-nav {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
     padding: 10px;
   }
