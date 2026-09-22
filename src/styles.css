@@ -17,7 +17,7 @@
   color: var(--cream);
   background:
     radial-gradient(circle at top left, rgba(var(--celestial-blue-rgb), 0.28), transparent 30%),
-    linear-gradient(145deg, var(--coffee-bean) 0%, #2D2323 100%);
+    linear-gradient(145deg, var(--coffee-bean) 0%, var(--coffee-bean) 100%);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -72,7 +72,7 @@ button {
   border: 1px solid rgba(var(--green-rgb), 0.16);
   border-radius: 22px;
   background: rgba(var(--cream-rgb), 0.72);
-  box-shadow: 0 18px 40px rgba(20, 12, 7, 0.2);
+  box-shadow: 0 18px 40px rgba(var(--coffee-bean-rgb), 0.2);
 }
 
 .feature-button {
@@ -96,7 +96,7 @@ button {
 .feature-button.active,
 .feature-button:hover {
   background: var(--green);
-  color: #fff;
+  color: var(--cannoli-cream);
 }
 
 .hero-card,
@@ -105,7 +105,7 @@ button {
   position: relative;
   border: 1px solid rgba(var(--green-rgb), 0.16);
   background: var(--cream);
-  box-shadow: 0 24px 60px rgba(20, 12, 7, 0.32);
+  box-shadow: 0 24px 60px rgba(var(--coffee-bean-rgb), 0.32);
   backdrop-filter: blur(18px);
 }
 
@@ -188,7 +188,7 @@ button {
   border: 1px solid rgba(var(--green-rgb), 0.16);
   border-radius: 28px;
   background: var(--cream);
-  box-shadow: 0 24px 60px rgba(20, 12, 7, 0.32);
+  box-shadow: 0 24px 60px rgba(var(--coffee-bean-rgb), 0.32);
 }
 
 .recipe-window-heading,
@@ -493,7 +493,7 @@ button {
   border: 1px solid rgba(var(--green-rgb), 0.16);
   border-radius: 28px;
   background: var(--cream);
-  box-shadow: 0 24px 60px rgba(20, 12, 7, 0.32);
+  box-shadow: 0 24px 60px rgba(var(--coffee-bean-rgb), 0.32);
 }
 
 .week-window-heading {
@@ -596,8 +596,8 @@ button {
 }
 
 .schedule-meal-cell.recipe-missing {
-  border-color: rgba(20, 20, 20, 0.2);
-  background: rgba(20, 20, 20, 0.06);
+  border-color: rgba(var(--coffee-bean-rgb), 0.2);
+  background: rgba(var(--coffee-bean-rgb), 0.06);
 }
 
 .schedule-meal-cell strong {
@@ -631,7 +631,7 @@ button {
 }
 
 .recipe-option-missing {
-  color: #171717;
+  color: var(--brown);
 }
 
 .schedule-meal-cell span {
@@ -650,7 +650,7 @@ button {
   border: 1px solid rgba(var(--green-rgb), 0.16);
   border-radius: 28px;
   background: var(--cream);
-  box-shadow: 0 24px 60px rgba(20, 12, 7, 0.32);
+  box-shadow: 0 24px 60px rgba(var(--coffee-bean-rgb), 0.32);
 }
 
 .shopping-window-heading {
@@ -669,7 +669,7 @@ button {
 }
 
 .shopping-window-heading > span {
-  color: #5b6e62;
+  color: var(--celestial-blue);
   font-weight: 700;
 }
 
@@ -874,7 +874,7 @@ button {
   border-radius: 18px;
   padding: 13px 16px;
   background: var(--green);
-  color: #fff;
+  color: var(--cannoli-cream);
   font-weight: 700;
   transition: transform 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
 }
@@ -944,15 +944,15 @@ button.danger {
 }
 
 .status-open {
-  box-shadow: inset 0 0 0 1px rgba(111, 139, 122, 0.2);
+  box-shadow: inset 0 0 0 1px rgba(var(--celestial-blue-rgb), 0.2);
 }
 
 .status-doing {
-  box-shadow: inset 0 0 0 1px rgba(215, 183, 122, 0.26);
+  box-shadow: inset 0 0 0 1px rgba(var(--toasted-coconut-rgb), 0.26);
 }
 
 .status-done {
-  box-shadow: inset 0 0 0 1px rgba(80, 150, 102, 0.24);
+  box-shadow: inset 0 0 0 1px rgba(var(--celestial-blue-rgb), 0.24);
 }
 
 @media (max-width: 1000px) {
