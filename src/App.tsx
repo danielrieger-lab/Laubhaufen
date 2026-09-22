@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent } from 'react';
 import {
   deleteRecipe,
   deletePantryItem,
@@ -22,7 +22,6 @@ import {
   createId,
   dayLabel,
   getMondayForDate,
-  parseLines,
   parseTags,
   loadAppState,
   nextCheckState,
@@ -37,6 +36,62 @@ const starterRecipeIds = ['starter-overnight-oats', 'starter-vegetable-pasta', '
 const starterMealIds = ['starter-monday-breakfast', 'starter-monday-dinner', 'starter-wednesday-lunch'];
 const starterShoppingIds = ['starter-shopping-oats', 'starter-shopping-pasta', 'starter-shopping-tortillas'];
 
+type MultiValueFieldProps = {
+  label: string;
+  values: string[];
+  suggestions?: string[];
+  listId?: string;
+  placeholder: string;
+  onChange: (values: string[]) => void;
+};
+
+function MultiValueField({ label, values, suggestions = [], listId, placeholder, onChange }: MultiValueFieldProps) {
+  const [input, setInput] = useState('');
+
+  function addValues(value: string): void {
+    const nextValues = parseTags(value);
+    if (nextValues.length === 0) {
+      return;
+    }
+
+    const existing = new Set(values.map((entry) => entry.toLocaleLowerCase('de-DE')));
+    onChange([...values, ...nextValues.filter((entry) => !existing.has(entry.toLocaleLowerCase('de-DE')))]);
+    setInput('');
+  }
+
+  function handleKeyDown(event: KeyboardEvent<HTMLInputElement>): void {
+    if (event.key === 'Enter' || event.key === ',') {
+      event.preventDefault();
+      addValues(input);
+    }
+  }
+
+  return (
+    <label className="multi-value-field">
+      {label}
+      <div className="multi-value-input">
+        <div className="multi-value-chips">
+          {values.map((value) => (
+            <span className="multi-value-chip" key={value}>
+              {value}
+              <button type="button" onClick={() => onChange(values.filter((entry) => entry !== value))} aria-label={`${value} entfernen`}>×</button>
+            </span>
+          ))}
+        </div>
+        <input
+          list={listId}
+          value={input}
+          onChange={(event) => setInput(event.target.value)}
+          onKeyDown={handleKeyDown}
+          onBlur={() => addValues(input)}
+          placeholder={values.length === 0 ? placeholder : 'Weitere hinzufügen'}
+        />
+      </div>
+      {listId ? <datalist id={listId}>{suggestions.map((suggestion) => <option key={suggestion} value={suggestion} />)}</datalist> : null}
+    </label>
+  );
+}
+
 function App() {
   const persisted = loadAppState();
   const firebase = useMemo(() => getFirebaseServices(), []);
@@ -48,7 +103,7 @@ function App() {
   const [pantryItems, setPantryItems] = useState<PantryItem[]>(persisted?.pantryItems ?? []);
   const [activeTab, setActiveTab] = useState<'recipes' | 'week' | 'shopping' | 'pantry' | null>(null);
   const [syncStatus, setSyncStatus] = useState(firebase ? 'Gemeinsame Synchronisierung wird verbunden ...' : 'Lokaler Modus');
-  const [recipeDraft, setRecipeDraft] = useState({ title: '', tags: '', countries: '', seasons: '', ingredients: '', link: '' });
+  const [recipeDraft, setRecipeDraft] = useState({ title: '', tags: [] as string[], countries: [] as string[], seasons: [] as string[], ingredients: [] as string[], link: '' });
   const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
   const [editingPantryId, setEditingPantryId] = useState<string | null>(null);
@@ -143,15 +198,15 @@ function App() {
 
     const recipe = createRecipe({
       title: recipeDraft.title.trim(),
-      tags: parseTags(recipeDraft.tags),
-      countries: parseTags(recipeDraft.countries),
-      seasons: parseTags(recipeDraft.seasons),
-      ingredients: parseLines(recipeDraft.ingredients),
+      tags: recipeDraft.tags,
+      countries: recipeDraft.countries,
+      seasons: recipeDraft.seasons,
+      ingredients: recipeDraft.ingredients,
       link: recipeDraft.link.trim()
     });
 
     setRecipes((current) => [recipe, ...current]);
-    setRecipeDraft({ title: '', tags: '', countries: '', seasons: '', ingredients: '', link: '' });
+    setRecipeDraft({ title: '', tags: [], countries: [], seasons: [], ingredients: [], link: '' });
 
     if (firebase) {
       void upsertRecipe(firebase.db, recipe).catch(() => setSyncStatus('Synchronisierung nicht verfügbar'));
@@ -437,25 +492,10 @@ function App() {
                 <input value={recipeDraft.title} onChange={(event) => setRecipeDraft((current) => ({ ...current, title: event.target.value }))} placeholder="Name des Rezepts" required />
               </label>
 
-              <label>
-                Tags
-                <input list="recipe-tags" value={recipeDraft.tags} onChange={(event) => setRecipeDraft((current) => ({ ...current, tags: event.target.value }))} placeholder="z. B. schnell, vegetarisch" />
-              </label>
-
-              <label>
-                Land
-                <input list="recipe-countries" value={recipeDraft.countries} onChange={(event) => setRecipeDraft((current) => ({ ...current, countries: event.target.value }))} placeholder="z. B. Italien, Japan" />
-              </label>
-
-              <label>
-                Season
-                <input list="recipe-seasons" value={recipeDraft.seasons} onChange={(event) => setRecipeDraft((current) => ({ ...current, seasons: event.target.value }))} placeholder="z. B. Frühling, Winter" />
-              </label>
-
-              <label>
-                Zutaten, eine pro Zeile
-                <textarea value={recipeDraft.ingredients} onChange={(event) => setRecipeDraft((current) => ({ ...current, ingredients: event.target.value }))} rows={5} />
-              </label>
+              <MultiValueField label="Tags" values={recipeDraft.tags} suggestions={availableTags} listId="recipe-tags" placeholder="z. B. schnell, vegetarisch" onChange={(tags) => setRecipeDraft((current) => ({ ...current, tags }))} />
+              <MultiValueField label="Land" values={recipeDraft.countries} suggestions={availableCountries} listId="recipe-countries" placeholder="z. B. Italien, Japan" onChange={(countries) => setRecipeDraft((current) => ({ ...current, countries }))} />
+              <MultiValueField label="Season" values={recipeDraft.seasons} suggestions={availableSeasons} listId="recipe-seasons" placeholder="z. B. Frühling, Winter" onChange={(seasons) => setRecipeDraft((current) => ({ ...current, seasons }))} />
+              <MultiValueField label="Zutaten" values={recipeDraft.ingredients} placeholder="Zutat hinzufügen" onChange={(ingredients) => setRecipeDraft((current) => ({ ...current, ingredients }))} />
 
               <label>
                 Link
@@ -475,22 +515,10 @@ function App() {
                         Titel
                         <input value={editingRecipe.title} onChange={(event) => setEditingRecipe((current) => current ? { ...current, title: event.target.value } : current)} required />
                       </label>
-                      <label>
-                        Tags
-                        <input list="recipe-tags" value={(editingRecipe.tags ?? []).join(', ')} onChange={(event) => setEditingRecipe((current) => current ? { ...current, tags: parseTags(event.target.value) } : current)} placeholder="z. B. schnell, vegetarisch" />
-                      </label>
-                      <label>
-                        Land
-                        <input list="recipe-countries" value={(editingRecipe.countries ?? []).join(', ')} onChange={(event) => setEditingRecipe((current) => current ? { ...current, countries: parseTags(event.target.value) } : current)} placeholder="z. B. Italien, Japan" />
-                      </label>
-                      <label>
-                        Season
-                        <input list="recipe-seasons" value={(editingRecipe.seasons ?? []).join(', ')} onChange={(event) => setEditingRecipe((current) => current ? { ...current, seasons: parseTags(event.target.value) } : current)} placeholder="z. B. Frühling, Winter" />
-                      </label>
-                      <label>
-                        Zutaten, eine pro Zeile
-                        <textarea rows={4} value={editingRecipe.ingredients.join('\n')} onChange={(event) => setEditingRecipe((current) => current ? { ...current, ingredients: parseLines(event.target.value) } : current)} />
-                      </label>
+                      <MultiValueField label="Tags" values={editingRecipe.tags ?? []} suggestions={availableTags} listId={`recipe-tags-edit-${editingRecipe.id}`} placeholder="z. B. schnell, vegetarisch" onChange={(tags) => setEditingRecipe((current) => current ? { ...current, tags } : current)} />
+                      <MultiValueField label="Land" values={editingRecipe.countries ?? []} suggestions={availableCountries} listId={`recipe-countries-edit-${editingRecipe.id}`} placeholder="z. B. Italien, Japan" onChange={(countries) => setEditingRecipe((current) => current ? { ...current, countries } : current)} />
+                      <MultiValueField label="Season" values={editingRecipe.seasons ?? []} suggestions={availableSeasons} listId={`recipe-seasons-edit-${editingRecipe.id}`} placeholder="z. B. Frühling, Winter" onChange={(seasons) => setEditingRecipe((current) => current ? { ...current, seasons } : current)} />
+                      <MultiValueField label="Zutaten" values={editingRecipe.ingredients} placeholder="Zutat hinzufügen" onChange={(ingredients) => setEditingRecipe((current) => current ? { ...current, ingredients } : current)} />
                       <label>
                         Link
                         <input type="url" value={editingRecipe.link ?? ''} onChange={(event) => setEditingRecipe((current) => current ? { ...current, link: event.target.value } : current)} placeholder="https://..." />
@@ -528,9 +556,6 @@ function App() {
                 </article>
               ))}
             </div>
-            <datalist id="recipe-tags">{availableTags.map((tag) => <option key={tag} value={tag} />)}</datalist>
-            <datalist id="recipe-countries">{availableCountries.map((country) => <option key={country} value={country} />)}</datalist>
-            <datalist id="recipe-seasons">{availableSeasons.map((season) => <option key={season} value={season} />)}</datalist>
           </div>
         </section>
       ) : null}

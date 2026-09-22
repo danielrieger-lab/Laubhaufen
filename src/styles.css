@@ -238,6 +238,70 @@ button {
   font-size: 1.5rem;
 }
 
+.multi-value-field {
+  display: grid;
+  gap: 7px;
+}
+
+.multi-value-input {
+  display: grid;
+  gap: 8px;
+  padding: 9px 10px;
+  border: 1px solid rgba(var(--green-rgb), 0.2);
+  border-radius: 18px;
+  background: rgba(var(--cream-rgb), 0.78);
+}
+
+.multi-value-input:focus-within {
+  outline: 3px solid rgba(var(--green-rgb), 0.22);
+  outline-offset: 2px;
+}
+
+.multi-value-input input {
+  min-width: 0;
+  padding: 4px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+}
+
+.multi-value-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.multi-value-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px 5px 10px;
+  border-radius: 999px;
+  background: rgba(var(--green-rgb), 0.1);
+  color: var(--green);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.multi-value-chip button {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  padding: 0;
+  place-items: center;
+  border-radius: 50%;
+  background: transparent;
+  color: currentColor;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.multi-value-chip button:hover {
+  box-shadow: none;
+  background: rgba(var(--green-rgb), 0.16);
+}
+
 .recipe-list {
   display: grid;
   gap: 12px;
