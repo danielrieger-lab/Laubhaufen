@@ -46,14 +46,20 @@ button {
 .app-shell {
   width: min(1240px, calc(100vw - 32px));
   margin: 0 auto;
-  padding: 32px 0 48px;
+  padding: 32px 0 128px;
 }
 
 .feature-nav {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
-  margin-top: 24px;
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  left: 16px;
+  z-index: 10;
+  width: min(1240px, calc(100vw - 32px));
+  margin: 0 auto;
   padding: 14px;
   border: 1px solid rgba(var(--green-rgb), 0.16);
   border-radius: 22px;
@@ -807,7 +813,7 @@ button.danger {
 @media (max-width: 700px) {
   .app-shell {
     width: min(100vw - 20px, 1240px);
-    padding-top: 10px;
+    padding: 10px 0 120px;
   }
 
   .hero-card,
