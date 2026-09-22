@@ -675,16 +675,16 @@ function App() {
 
       <nav className="feature-nav" aria-label="Bereiche">
         <button className={activeTab === 'recipes' ? 'feature-button active' : 'feature-button'} onClick={() => setActiveTab('recipes')} type="button" aria-label="Rezepte" title="Rezepte">
-          <span aria-hidden="true">🍽️</span>
+          <svg className="feature-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M7 3v7" /><path d="M4.5 3v4.5a2.5 2.5 0 0 0 5 0V3" /><path d="M7 10v11" /><path d="M16 3v18" /><path d="M16 3c2.2 1.4 3.5 3.5 3.5 6H16" /></svg>
         </button>
         <button className={activeTab === 'week' ? 'feature-button active' : 'feature-button'} onClick={() => setActiveTab('week')} type="button" aria-label="Speiseplan" title="Speiseplan">
-          <span aria-hidden="true">📅</span>
+          <svg className="feature-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2" /><path d="M7 2.5v4M17 2.5v4M3 9h18M7 13h.01M12 13h.01M17 13h.01M7 17h.01M12 17h.01" /></svg>
         </button>
         <button className={activeTab === 'shopping' ? 'feature-button active' : 'feature-button'} onClick={() => setActiveTab('shopping')} type="button" aria-label="Einkaufsliste" title="Einkaufsliste">
-          <span aria-hidden="true">🛒</span>
+          <svg className="feature-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 1.9-1.4L20 8H6" /><circle cx="9" cy="19" r="1.3" /><circle cx="18" cy="19" r="1.3" /></svg>
         </button>
         <button className={activeTab === 'pantry' ? 'feature-button active' : 'feature-button'} onClick={() => setActiveTab('pantry')} type="button" aria-label="Vorratskammer" title="Vorratskammer">
-          <span aria-hidden="true">🧺</span>
+          <svg className="feature-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 9h16l-1.2 10.5H5.2L4 9Z" /><path d="M6 9a6 6 0 0 1 12 0M8 12v4M12 12v4M16 12v4" /></svg>
         </button>
       </nav>
 
